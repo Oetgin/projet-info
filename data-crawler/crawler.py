@@ -1,4 +1,4 @@
-import mysql.connector, datetime, requests, time
+import mysql.connector, datetime, requests, time, urllib.parse
 
 def iso_to_sql_datetime(iso_time: str):
     return datetime.datetime.fromisoformat(iso_time).strftime("%Y-%m-%d %H:%M:%S")
@@ -73,20 +73,23 @@ class ProxyUsage:
         self.calls: list[float] = [] # timestamps
 
 
-    def update_usages(self):
+    def register_usage(self):
+        self.calls.append(time.time())
+
+
+    # Update usages and check
+    def has_remaining(self):
         current = time.time()
         self.calls = list(filter(lambda t: current - t < RESET_DELAY, self.calls))
-        self.calls.append(current)
 
-
-    def has_remaining(self):
         return len(self.calls) < CALL_LIMIT
 
 
 class Proxy:
 
-    def __init__(self, proxy_url: str) -> None:
+    def __init__(self, proxy_url: str, need_uri_encoding: bool) -> None:
         self.proxy_url = proxy_url
+        self.need_uri_encoding = need_uri_encoding
         self.usages: dict[str, ProxyUsage] = {} # api_url, ProxyUsage
 
 
@@ -95,32 +98,40 @@ class Proxy:
 
     
     def make_request(self, api_url):
-        try:
-            result = requests.get(self.proxy_url + api_url, headers=HEADERS)
 
-            if api_url not in self.usages:
-                self.usages[api_url] = ProxyUsage()
+        if self.need_uri_encoding:
+            api_url = urllib.parse.quote_plus(api_url)
 
-            self.usages[api_url].update_usages()
+        result = requests.get(self.proxy_url + api_url, headers=HEADERS)
 
-            result.raise_for_status()
+        if result.status_code == 500:
+            return False
+        
+        if api_url not in self.usages:
+            self.usages[api_url] = ProxyUsage()
+        
+        self.usages[api_url].register_usage()
+
+        if result.status_code == 200:
             return result.json()
-        except (requests.HTTPError, requests.exceptions.JSONDecodeError) as e:
-            pass # Only pass if bad return code or if response is not JSON-formatted
 
 
 PROXIES = [
-    Proxy("https://corsproxy.io/?url="),
-    Proxy("https://api.allorigins.win/raw?url="),
-    Proxy("https://api.codetabs.com/v1/proxy?quest="),
-    Proxy(""), # Local ip
+    Proxy("https://corsproxy.io/?url=", False),
+    Proxy("https://api.allorigins.win/raw?url=", True),
+    Proxy("https://api.codetabs.com/v1/proxy?quest=", True),
+    Proxy("", False), # Local ip
 ]
 
 
 def get_data(url):
     for p in PROXIES:
         if p.has_remaining(url):
-            return p.make_request(url)
+            result = p.make_request(url)
+            if result == False:
+                print(f"Warning: {p.proxy_url} failed.")
+            else:
+                return result
         
     print("Warning: Unable to make request, all proxies reached call limit.")
 
