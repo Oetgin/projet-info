@@ -5,17 +5,8 @@ def iso_to_sql_datetime(iso_time: str):
 
 class DataQuery:
 
-    def __init__(self, url) -> None:
+    def __init__(self, url: str) -> None:
         self.url = url
-
-
-    def get_data(self):
-        try:
-            result = requests.get(self.url)
-            result.raise_for_status()
-            return result.json()
-        except:
-            pass
 
 
     def create_table(self, cursor):
@@ -68,6 +59,72 @@ class BikesStationsQuery(DataQuery):
         connection.commit()
 
 
+# ===== Proxy =====#
+
+CALL_LIMIT = 30
+RESET_DELAY = 3600 # 1h
+
+# We use proxies to bypass rate limit but we also need to bypass proxies restrictions...
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0"} 
+
+class ProxyUsage:
+
+    def __init__(self) -> None:
+        self.calls: list[float] = [] # timestamps
+
+
+    def update_usages(self):
+        current = time.time()
+        self.calls = list(filter(lambda t: current - t < RESET_DELAY, self.calls))
+        self.calls.append(current)
+
+
+    def has_remaining(self):
+        return len(self.calls) < CALL_LIMIT
+
+
+class Proxy:
+
+    def __init__(self, proxy_url: str) -> None:
+        self.proxy_url = proxy_url
+        self.usages: dict[str, ProxyUsage] = {} # api_url, ProxyUsage
+
+
+    def has_remaining(self, api_url):
+        return self.usages[api_url].has_remaining() if api_url in self.usages else True
+
+    
+    def make_request(self, api_url):
+        try:
+            result = requests.get(self.proxy_url + api_url, headers=HEADERS)
+
+            if api_url not in self.usages:
+                self.usages[api_url] = ProxyUsage()
+
+            self.usages[api_url].update_usages()
+
+            result.raise_for_status()
+            return result.json()
+        except (requests.HTTPError, requests.exceptions.JSONDecodeError) as e:
+            pass # Only pass if bad return code or if response is not JSON-formatted
+
+
+PROXIES = [
+    Proxy("https://corsproxy.io/?url="),
+    Proxy("https://api.allorigins.win/raw?url="),
+    Proxy("https://api.codetabs.com/v1/proxy?quest="),
+    Proxy(""), # Local ip
+]
+
+
+def get_data(url):
+    for p in PROXIES:
+        if p.has_remaining(url):
+            return p.make_request(url)
+        
+    print("Warning: Unable to make request, all proxies reached call limit.")
+
+
 # ===== Main ===== #
 
 if __name__ == "__main__":
@@ -75,7 +132,7 @@ if __name__ == "__main__":
     print("Waiting 10 seconds for the database to start...")
     time.sleep(10) # Most dirty fix you will ever see in your entire life (wait for the database to start when using docker compose)
 
-    QUERIES = [PRQuery(), BikesStationsQuery()]
+    QUERIES: list[DataQuery] = [PRQuery(), BikesStationsQuery()]
 
     print("Connecting to the database...")
     connection = mysql.connector.connect(
@@ -96,7 +153,7 @@ if __name__ == "__main__":
             start = time.time()
 
             for q in QUERIES:
-                data = q.get_data()
+                data = get_data(q.url)
                 if data:
                     q.store(data, connection, cursor)
 

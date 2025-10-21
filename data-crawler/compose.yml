@@ -8,6 +8,7 @@ services:
       - "3306:3306"
     volumes:
       - ./database:/var/lib/mysql
+      # - mysql_data:/var/lib/mysql
 
   adminer:
     image: adminer:latest
