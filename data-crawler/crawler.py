@@ -32,6 +32,11 @@ class PRQuery(DataQuery):
 
     
     def store(self, data, connection, cursor):
+
+        if "results" not in data:
+            print(f"Warning: unable to find 'results' in {data}")
+            return
+
         values = [(e["idparc"], iso_to_sql_datetime(e["lastupdate"]), e["etatouverture"], e["capacitesoliste"], e["jrdinfosoliste"]) for e in data["results"]]
         cursor.executemany("INSERT IGNORE INTO `parcs-relais` VALUES (%s, %s, %s, %s, %s);", values)
 
@@ -53,6 +58,11 @@ class BikesStationsQuery(DataQuery):
 
     
     def store(self, data, connection, cursor):
+
+        if "results" not in data:
+            print(f"Warning: unable to find 'results' in {data}")
+            return
+
         values = [(int(e["idstation"]), iso_to_sql_datetime(e["lastupdate"]), e["nombreemplacementsactuels"], e["nombreemplacementsdisponibles"], e["nombrevelosdisponibles"], ";".join(e["etat"])) for e in data["results"]]
         cursor.executemany("INSERT IGNORE INTO `bikes-stations` VALUES (%s, %s, %s, %s, %s, %s);", values)
 
