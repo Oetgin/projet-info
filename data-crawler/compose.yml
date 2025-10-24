@@ -19,6 +19,7 @@ services:
       - mysql
 
   crawler:
+    restart: unless-stopped
     build:
       dockerfile: "Dockerfile"
     depends_on:
