@@ -97,14 +97,15 @@ class ProxyUsage:
 
 class Proxy:
 
-    def __init__(self, proxy_url: str, need_uri_encoding: bool) -> None:
+    def __init__(self, proxy_url: str, need_uri_encoding: bool, register_usages: bool) -> None:
         self.proxy_url = proxy_url
         self.need_uri_encoding = need_uri_encoding
+        self.register_usages = register_usages
         self.usages: dict[str, ProxyUsage] = {} # api_url, ProxyUsage
 
 
     def has_remaining(self, api_url):
-        return self.usages[api_url].has_remaining() if api_url in self.usages else True
+        return not self.register_usages or (self.usages[api_url].has_remaining() if api_url in self.usages else True)
 
     
     def make_request(self, api_url):
@@ -114,23 +115,35 @@ class Proxy:
 
         result = requests.get(self.proxy_url + api_url, headers=HEADERS)
 
-        if result.status_code == 500:
+        if result.status_code != 200 and result.status_code != 429:
+            print(f"Warning: {self.proxy_url} failed: status code {result.status_code}")
             return False
         
-        if api_url not in self.usages:
-            self.usages[api_url] = ProxyUsage()
-        
-        self.usages[api_url].register_usage()
+        if self.register_usages:
 
-        if result.status_code == 200:
-            return result.json()
+            if api_url not in self.usages:
+                self.usages[api_url] = ProxyUsage()
+            
+            self.usages[api_url].register_usage()
+
+        data = result.json()
+
+        if "errorcode" in data and data["errorcode"] == 10006:
+            print(f"Warning: {self.proxy_url} rate limit exceeded, reset time: {data["reset_time"]}")
+            return False
+        
+        return data
 
 
 PROXIES = [
-    Proxy("https://corsproxy.io/?url=", False),
-    Proxy("https://api.allorigins.win/raw?url=", True),
-    Proxy("https://api.codetabs.com/v1/proxy?quest=", True),
-    Proxy("", False), # Local ip
+    Proxy("https://white-thunder-6561.eaas-4c9.workers.dev/?", False, False),
+    Proxy("https://hidden-breeze-9b78.eaas-4c9.workers.dev/?", False, False),
+    Proxy("https://green-block-0ead.eaas-4c9.workers.dev/?", False, False),
+    Proxy("https://wandering-sun-783b.eaas-4c9.workers.dev/?", False, False),
+
+    Proxy("https://corsproxy.io/?url=", False, False),
+    Proxy("https://api.codetabs.com/v1/proxy?quest=", True, True),
+    Proxy("", False, True), # Local ip
 ]
 
 
@@ -138,9 +151,7 @@ def get_data(url):
     for p in PROXIES:
         if p.has_remaining(url):
             result = p.make_request(url)
-            if result == False:
-                print(f"Warning: {p.proxy_url} failed.")
-            else:
+            if result != False:
                 return result
         
     print("Warning: Unable to make request, all proxies reached call limit.")
