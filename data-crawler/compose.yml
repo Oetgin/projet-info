@@ -8,7 +8,6 @@ services:
       - "3306:3306"
     volumes:
       - ./database:/var/lib/mysql
-      # - mysql_data:/var/lib/mysql
 
   adminer:
     image: adminer:latest
@@ -25,5 +24,11 @@ services:
     depends_on:
       - mysql
 
-volumes:
-  mysql_data:
+  grafana:
+    image: grafana/grafana
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    volumes:
+      - ./grafana:/var/lib/grafana
+    user: '0'
