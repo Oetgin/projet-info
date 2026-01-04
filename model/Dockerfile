@@ -1,6 +1,5 @@
-FROM python:3.14.0-alpine
-
-RUN apt-get -y install libc-dev
+FROM python:slim
+# Can't use alpine because prophet need some specific build tools
 
 WORKDIR /usr/src/app
 
