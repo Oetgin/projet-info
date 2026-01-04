@@ -21,6 +21,8 @@ services:
       - mysql
     ports:
       - "8080:8080"
+    # To increase max upload size to 512M:
+    # docker exec -it -u 0 projet-info-adminer-1 sed -i.bak -E 's/^(upload_max_filesize[[:space:]]*=[[:space:]]*).*/\1512M/; s/^(post_max_size[[:space:]]*=[[:space:]]*).*/\1512M/' /usr/local/etc/php/conf.d/0-upload_large_dumps.ini
 
   grafana:
     image: grafana/grafana
