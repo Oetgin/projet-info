@@ -159,21 +159,33 @@ def get_data(url):
 
 # ===== Main ===== #
 
+DB_CONFIG_BASE = {
+    'host': 'mysql',
+    'user': 'root',
+    'password': 'root'
+}
+
+DB_CONFIG = {
+    **DB_CONFIG_BASE,
+    'database': 'open_data_rennes'
+}
+
 if __name__ == "__main__":
 
-    print("Waiting 10 seconds for the database to start...")
-    time.sleep(10) # Most dirty fix you will ever see in your entire life (wait for the database to start when using docker compose)
+    # print("Waiting 10 seconds for the database to start...")
+    # time.sleep(10) # Most dirty fix you will ever see in your entire life (wait for the database to start when using docker compose)
 
     QUERIES: list[DataQuery] = [PRQuery(), BikesStationsQuery()]
 
     print("Connecting to the database...")
-    connection = mysql.connector.connect(
-        host="mysql",
-        user="root",
-        password="root",
-        database="open_data_rennes"
-    )
+    connection = mysql.connector.connect(**DB_CONFIG_BASE)
+    cursor = connection.cursor()
 
+    cursor.execute(f"CREATE DATABASE IF NOT EXISTS `{DB_CONFIG['database']}`")
+    cursor.close()
+    connection.close()
+
+    connection = mysql.connector.connect(**DB_CONFIG)
     cursor = connection.cursor()
 
     for q in QUERIES:
