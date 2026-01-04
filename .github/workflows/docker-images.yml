@@ -12,15 +12,15 @@ jobs:
     permissions:
       packages: write
       contents: read
-      
+
     steps:
     - uses: actions/checkout@v6
 
     - name: Build crawler
       run: docker build ./crawler/ -t ghcr.io/oetgin/projet-info:crawler-latest
 
-    # - name: Build model
-    #   run: docker build ./model/ -t ghcr.io/oetgin/projet-info:model-latest
+    - name: Build model
+      run: docker build ./model/ -t ghcr.io/oetgin/projet-info:model-latest
 
     - name: Log in to registry
       run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -28,7 +28,5 @@ jobs:
     - name: Push crawler image
       run: docker push ghcr.io/oetgin/projet-info:crawler-latest
 
-    # - name: Push model image
-    #   run: docker push ghcr.io/oetgin/projet-info:model-latest
-
-      
+    - name: Push model image
+      run: docker push ghcr.io/oetgin/projet-info:model-latest

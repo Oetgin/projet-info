@@ -1,0 +1,41 @@
+services:
+  mysql:
+    image: mysql:latest
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - ./database:/var/lib/mysql
+    # ports:
+    #   - "3306:3306"
+
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+
+  grafana:
+    image: grafana/grafana
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    user: '0' # Use root as default user (seems to be needed when binding grafana dir below)
+    volumes:
+      - ./grafana:/var/lib/grafana
+    ports:
+      - "3002:3000"
+
+  crawler:
+    image: ghcr.io/oetgin/projet-info:crawler-latest
+    restart: unless-stopped
+    depends_on:
+      - mysql
+
+  model:
+    image: ghcr.io/oetgin/projet-info:model-latest
+    restart: unless-stopped
+    depends_on:
+      - mysql
