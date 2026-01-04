@@ -1,5 +1,7 @@
 FROM python:3.14.0-alpine
 
+RUN apt-get -y install libc-dev
+
 WORKDIR /usr/src/app
 
 COPY model.py .
