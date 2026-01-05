@@ -128,7 +128,7 @@ class Proxy:
 
         data = result.json()
 
-        if "errorcode" in data and data["errorcode"] == 10006:
+        if "errorcode" in data and (data["errorcode"] == 10006 or data["errorcode"] == 10001):
             print(f"Warning: {self.proxy_url} rate limit exceeded, reset time: {data["reset_time"]}")
             return False
         
