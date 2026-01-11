@@ -1,5 +1,17 @@
 # Projet INFO - S7 & S8
 
+Voici le repertoire du projet INFO réalisé durant le semestre 7 et 8. Vous trouverez ici les sources de notre projet et les documentations associées.
+
+Membres du groupe :
+Prénom | Pseudo GitHub
+-|-
+Dominique | wise-dom
+Enora | enorafaude
+Ewen | Loghiks
+Karl | BTzangetsu
+Ouiam | OuiamZeroual
+Théo | Oetgin
+
 ## Déploiement
 
 Afin de déployer le projet, suivez les étapes suivantes :
@@ -21,3 +33,9 @@ Adminer est accessible à l'adresse [http://localhost:8080](http://localhost:808
 - **Password** : root
 
 Pour se connecter et configuer Grafana, suivez [ce guide](graph/grafana.md).
+
+## Divers
+
+Vous trouverez des informations supplémentaires concernant le crawler [ici](crawler/README.md).
+
+Vous trouverez les recherches menées sur le modèle de prédiction [ici](model/research/research.ipynb).
