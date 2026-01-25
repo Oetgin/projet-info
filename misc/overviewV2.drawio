@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0" version="29.2.9">
+  <diagram name="Page-1" id="__kG7xyJXzHRv-Hd5kYc">
+    <mxGraphModel dx="1722" dy="926" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-11" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="-mOGkcxvcosX8Jd9zZ87-14" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-12" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="API&lt;br&gt;Open Data Rennes" vertex="1">
+          <mxGeometry height="60" width="120" x="40" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-13" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="-mOGkcxvcosX8Jd9zZ87-16" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-14" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="Data crawler" vertex="1">
+          <mxGeometry height="60" width="120" x="240" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-15" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="-mOGkcxvcosX8Jd9zZ87-17" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-16" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="Base de données" vertex="1">
+          <mxGeometry height="60" width="120" x="440" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="GI1jccqpgZBE5_wJqPCX-2" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" target="GI1jccqpgZBE5_wJqPCX-1" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-17" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="Backend / API" vertex="1">
+          <mxGeometry height="60" width="120" x="640" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-18" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="&lt;div&gt;Modèle&lt;/div&gt;&lt;div&gt;de prédiction&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="440" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-19" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" target="-mOGkcxvcosX8Jd9zZ87-18" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="120" as="sourcePoint" />
+            <mxPoint x="480" y="90" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="-mOGkcxvcosX8Jd9zZ87-20" edge="1" parent="1" source="-mOGkcxvcosX8Jd9zZ87-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" target="-mOGkcxvcosX8Jd9zZ87-16" value="">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="590" y="170" as="sourcePoint" />
+            <mxPoint x="590" y="90" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="GI1jccqpgZBE5_wJqPCX-1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=none;" value="&lt;div&gt;Application /&lt;/div&gt;&lt;div&gt;Site web&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="840" y="160" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
