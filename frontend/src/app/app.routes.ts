@@ -7,6 +7,6 @@ export const routes: Routes = [
   { path: '', redirectTo: 'map', pathMatch: 'full' },
   { path: 'map', component: MapComponent },
   { path: 'parking/:id', component: ParkingDetailComponent },
-  { path: 'predictions', component: PredictionsComponent }
+  { path: 'parking/:id/predictions', component: PredictionsComponent }
 ];
 

@@ -40,4 +40,9 @@ export class ParkingDetailComponent implements OnInit {
   goBack() {
     this.router.navigate(['/map']);
   }
+
+  goToPredictions() {
+    this.router.navigate(['/parking', this.parking.id, 'predictions']);
+  }
+  
 }
