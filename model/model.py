@@ -79,7 +79,7 @@ def load_park_data(connection, park_id: str, days_back: int = 60) -> pd.DataFram
         SELECT idparc, lastupdate, etatouverture, capacitesoliste, jrdinfosoliste
         FROM `parcs-relais`
         WHERE idparc = '{park_id}' AND lastupdate >= '{cutoff_date}'
-        ORDER BY lastupdate ASC
+        ORDER BY lastupdate DESC
     """
     
     df = pd.read_sql(query, connection)
