@@ -1,0 +1,39 @@
+<div class="app">
+
+  <header class="top-bar">
+    <h1>Parkings</h1>
+    <span class="city">Rennes</span>
+  </header>
+
+  <div id="map"></div>
+
+  <div class="card"
+       *ngIf="selectedParking"
+       (click)="goToDetail()">
+
+    <div class="card-header">
+      <h3>{{ selectedParking.name }}</h3>
+
+      <span class="badge"
+        [ngClass]="{
+          'green': selectedParking.free > 50,
+          'orange': selectedParking.free <= 50 && selectedParking.free > 10,
+          'red': selectedParking.free <= 10
+        }">
+        {{ selectedParking.free }} places
+      </span>
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress"
+           [style.width.%]="(selectedParking.free / selectedParking.total) * 100">
+      </div>
+    </div>
+
+    <div class="card-footer">
+      Voir les détails →
+    </div>
+
+  </div>
+
+</div>

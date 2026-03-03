@@ -1,0 +1,63 @@
+<div class="page">
+    <header class="top">
+      <button class="back" (click)="goBack()">←</button>
+      <div>
+        <h2>Prédictions</h2>
+        <p class="sub">Tendances d’occupation à Rennes</p>
+      </div>
+    </header>
+  
+    <div class="kpis">
+      <div class="kpi">
+        <div class="label">Taux global</div>
+        <div class="value">{{ globalRate }}%</div>
+      </div>
+  
+      <div class="kpi">
+        <div class="label">Heure de pointe</div>
+        <div class="value">{{ peakHour }}</div>
+      </div>
+  
+      <div class="kpi">
+        <div class="label">Conseil</div>
+        <div class="value small">{{ advice }}</div>
+      </div>
+    </div>
+  
+    <div class="card">
+      <h3>Occupation - dernières 24h</h3>
+      <div class="chart-wrap">
+        <canvas id="occChart"></canvas>
+      </div>
+    </div>
+  
+    <div class="card">
+      <h3>Prévisions (prochaines heures)</h3>
+  
+      <div class="forecast">
+        <div class="row" *ngFor="let p of forecast">
+  
+          <div class="left">
+            <span class="hour">{{ p.hour }}</span>
+  
+            <span class="pill" [ngClass]="getLevelClass(p.occupancy)">
+              {{ getLevelLabel(p.occupancy) }}
+            </span>
+          </div>
+  
+          <div class="right">
+            <strong>{{ p.occupancy }}%</strong>
+  
+            <div class="mini-bar">
+              <div
+                class="mini-fill"
+                [ngClass]="getLevelClass(p.occupancy)"
+                [style.width.%]="p.occupancy">
+              </div>
+            </div>
+          </div>
+  
+        </div>
+      </div>
+    </div>
+  </div>

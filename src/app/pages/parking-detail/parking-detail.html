@@ -1,0 +1,39 @@
+<div class="detail-wrapper" *ngIf="parking">
+
+    <button class="back-btn" (click)="goBack()">← Retour</button>
+  
+    <div class="card">
+  
+      <h2>{{ parking.name }}</h2>
+  
+      <span class="badge"
+            [ngClass]="{
+              'badge-open': parking.status === 'Disponible',
+              'badge-full': parking.status === 'Complet'
+            }">
+        {{ parking.status }}
+      </span>
+  
+      <div class="stats">
+        <div class="stat">
+          <span class="label">Places disponibles</span>
+          <span class="value">{{ parking.free }}</span>
+        </div>
+  
+        <div class="stat">
+          <span class="label">Capacité totale</span>
+          <span class="value">{{ parking.total }}</span>
+        </div>
+      </div>
+  
+      <div class="progress-container">
+        <div class="progress-bar"
+             [style.width.%]="occupancyRate">
+        </div>
+      </div>
+  
+      <p class="rate">{{ occupancyRate }}% occupé</p>
+  
+    </div>
+  
+  </div>
