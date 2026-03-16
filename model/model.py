@@ -79,7 +79,7 @@ def load_park_data(connection, park_id: str, days_back: int = 60) -> pd.DataFram
         SELECT idparc, lastupdate, etatouverture, capacitesoliste, jrdinfosoliste
         FROM `parcs-relais`
         WHERE idparc = '{park_id}' AND lastupdate >= '{cutoff_date}'
-        ORDER BY lastupdate DESC
+        ORDER BY lastupdate ASC
     """
     
     df = pd.read_sql(query, connection)
@@ -317,6 +317,7 @@ def train_all_models(connection):
 
 def make_predictions(connection, predictions_connection, predictions_cursor):    
     prediction_time = datetime.datetime.now()
+    prediction_anchor = pd.Timestamp(prediction_time).floor(f'{PREDICTION_INTERVAL_MINUTES}min')
     predictions_list = []
     
     for park_id in PARKS:
@@ -369,18 +370,26 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
             
             # Generate forecast
             future_periods = (PREDICTION_HORIZON_HOURS * 60) // PREDICTION_INTERVAL_MINUTES
-            future = model.make_future_dataframe(periods=future_periods, freq=f'{PREDICTION_INTERVAL_MINUTES}min')
+            anchor_ts = max(
+                prediction_anchor,
+                pd.Timestamp(current_state['timestamp']),
+                pd.Timestamp(context_df['ds'].max())
+            )
+            future_times = pd.date_range(
+                start=anchor_ts + pd.Timedelta(minutes=PREDICTION_INTERVAL_MINUTES),
+                periods=future_periods,
+                freq=f'{PREDICTION_INTERVAL_MINUTES}min'
+            )
+            future = pd.DataFrame({'ds': future_times})
             forecast = model.predict(future)
             
             # Calculate offset to ensure continuity between current and first prediction
-            # Find the forecast value at or right after the current timestamp
-            future_forecast = forecast[forecast['ds'] > current_state['timestamp']].copy()
-            if len(future_forecast) == 0:
+            if len(forecast) == 0:
                 print(f"[{park_id}] No future forecast available")
                 continue
             
             # Get the first future prediction to calculate offset
-            first_future_rate = np.clip(future_forecast.iloc[0]['yhat'], 0, 1)
+            first_future_rate = np.clip(forecast.iloc[0]['yhat'], 0, 1)
             # Offset = difference between current observed rate and first predicted rate
             rate_offset = current_occupancy_rate - first_future_rate
             
@@ -396,7 +405,7 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
             })
             
             # Then add future predictions with offset applied for continuity
-            for _, row in future_forecast.iterrows():
+            for _, row in forecast.iterrows():
                 target_time = pd.to_datetime(row['ds'])
                 
                 # Apply offset to make predictions continuous with current observation
