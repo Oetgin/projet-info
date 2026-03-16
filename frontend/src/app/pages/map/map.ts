@@ -31,13 +31,13 @@ export class MapComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  // 🔵 Initialisation des données (cycle Angular correct)
+  //  Initialisation des données (cycle Angular correct)
   ngOnInit(): void {
     this.selectedParking =
       this.parkingService.selectedParking ?? PARKINGS[0];
   }
 
-  // 🔵 Initialisation Leaflet (manipulation DOM)
+  //  Initialisation Leaflet (manipulation DOM)
 
   ngAfterViewInit(): void {
     this.initMap();
@@ -51,14 +51,17 @@ export class MapComponent implements OnInit, AfterViewInit {
     }).addTo(this.map);
 
     PARKINGS.forEach(parking => {
-      L.marker([parking.lat, parking.lng])
+      L.marker(
+        [parking.lat, parking.lng],
+        { icon: this.getMarkerIcon(parking) }
+      )
         .addTo(this.map)
         .bindPopup(parking.name)
         .on('click', () => {
           this.zone.run(() => {
             this.parkingService.selectedParking = parking;
             this.selectedParking = parking;
-            this.cdr.detectChanges(); // 🔥 force la mise à jour
+            this.cdr.detectChanges(); //  force la mise à jour
           });
         });
     });
@@ -67,6 +70,26 @@ export class MapComponent implements OnInit, AfterViewInit {
   goToDetail() {
     this.router.navigate(['/parking', this.selectedParking.id]);
   }
+  getMarkerIcon(parking: any) {
+
+    let color = 'green';
+  
+    if (parking.free < 20) {
+      color = 'red';
+    } else if (parking.free < 50) {
+      color = 'orange';
+    }
+  
+    return L.icon({
+      iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
+    });
+  
+  }
+
+
 }
 
 const PARKINGS = [
