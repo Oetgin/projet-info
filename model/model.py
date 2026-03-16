@@ -194,8 +194,22 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
         return None
     
     # Create time index
-    df_open['lastupdate'] = pd.to_datetime(df_open['lastupdate'])
+    df_open['lastupdate'] = pd.to_datetime(df_open['lastupdate'], errors='coerce')
+    df_open = df_open.dropna(subset=['lastupdate', 'occupancy_rate', 'capacitesoliste'])
     df_open = df_open.sort_values('lastupdate')
+
+    # Deduplicate timestamps before reindex; multiple rows can share the same update time.
+    duplicate_count = int(df_open['lastupdate'].duplicated().sum())
+    if duplicate_count > 0:
+        df_open = (
+            df_open.groupby('lastupdate', as_index=False)
+            .agg({
+                'occupancy_rate': 'mean',
+                'capacitesoliste': 'last'
+            })
+            .sort_values('lastupdate')
+        )
+        print(f"[{park_id}] Info: merged {duplicate_count} duplicate timestamps")
     
     start_time = df_open['lastupdate'].min()
     end_time = df_open['lastupdate'].max()
