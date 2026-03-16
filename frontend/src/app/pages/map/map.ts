@@ -41,6 +41,7 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initMap();
+    this.locateUser();
   }
 
   private initMap(): void {
@@ -88,6 +89,51 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   
   }
+  locateUser() {
+
+    if (!navigator.geolocation) {
+      console.log("Géolocalisation non supportée");
+      return;
+    }
+  
+    navigator.geolocation.getCurrentPosition(position => {
+  
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+  
+      // centrer la carte
+      this.map.setView([lat, lng], 15);
+  
+      // marker utilisateur
+      L.marker(
+        [lat, lng],
+        { icon: this.getUserIcon() }
+      )
+      .addTo(this.map)
+      .bindPopup("📍 Vous êtes ici")
+      .openPopup();
+  
+      // cercle autour de l'utilisateur
+      L.circle([lat, lng], {
+        radius: 200,
+        color: '#3b82f6',
+        fillColor: '#3b82f6',
+        fillOpacity: 0.2
+      }).addTo(this.map);
+  
+    });
+  
+  }
+  getUserIcon() {
+    return L.icon({
+      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      iconSize: [25, 41],
+      iconAnchor: [12, 41]
+    });
+  }
+
+
 
 
 }
