@@ -238,7 +238,7 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
 
 
 
-def train_prophet_model(df: pd.DataFrame, park_id: str) -> Tuple[Prophet, float]:    
+def train_prophet_model(df: pd.DataFrame) -> Tuple[Prophet, float]:    
     # Prepare data for Prophet (ds = datetime, y = target)
     prophet_df = pd.DataFrame({
         'ds': df.index,
@@ -299,7 +299,7 @@ def train_all_models(connection):
     trained_count = 0
     
     for park_id in PARKS:
-        try:
+        # try:
             # Load data
             df = load_park_data(connection, park_id, days_back=60)
             if df is None or len(df) < 100:
@@ -313,14 +313,14 @@ def train_all_models(connection):
                 continue
             
             # Train
-            model, max_occupancy = train_prophet_model(df_processed, park_id)
+            model, max_occupancy = train_prophet_model(df_processed)
             
             # Save
             save_model(model, park_id, max_occupancy)
             trained_count += 1
             
-        except Exception as e:
-            print(f"[{park_id}] Error during training: {e}")
+        # except Exception as e:
+        #     print(f"[{park_id}] Error during training: {e}")
     
     duration = time.time() - start_time
     print(f"\nTraining Complete: {trained_count}/{len(PARKS)} models trained in {duration:.1f}s")
