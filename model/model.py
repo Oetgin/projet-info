@@ -194,22 +194,8 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
         return None
     
     # Create time index
-    df_open['lastupdate'] = pd.to_datetime(df_open['lastupdate'], errors='coerce')
-    df_open = df_open.dropna(subset=['lastupdate', 'occupancy_rate', 'capacitesoliste'])
+    df_open['lastupdate'] = pd.to_datetime(df_open['lastupdate'])
     df_open = df_open.sort_values('lastupdate')
-
-    # Deduplicate timestamps before reindex; multiple rows can share the same update time.
-    duplicate_count = int(df_open['lastupdate'].duplicated().sum())
-    if duplicate_count > 0:
-        df_open = (
-            df_open.groupby('lastupdate', as_index=False)
-            .agg({
-                'occupancy_rate': 'mean',
-                'capacitesoliste': 'last'
-            })
-            .sort_values('lastupdate')
-        )
-        print(f"[{park_id}] Info: merged {duplicate_count} duplicate timestamps")
     
     start_time = df_open['lastupdate'].min()
     end_time = df_open['lastupdate'].max()
@@ -238,22 +224,12 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
 
 
 
-def prepare_prophet_dataframe(df: pd.DataFrame) -> pd.DataFrame:
-    prophet_df = pd.DataFrame({
-        'ds': pd.to_datetime(df.index, errors='coerce'),
-        'y': pd.to_numeric(df['occupancy_rate'], errors='coerce')
-    })
-
-    prophet_df = prophet_df.dropna(subset=['ds', 'y'])
-    prophet_df = prophet_df.sort_values('ds')
-
-    return prophet_df.reset_index(drop=True)
-
-
 def train_prophet_model(df: pd.DataFrame, park_id: str) -> Tuple[Prophet, float]:    
-    prophet_df = prepare_prophet_dataframe(df)
-    if len(prophet_df) < 100:
-        raise ValueError(f"insufficient clean samples for Prophet: {len(prophet_df)}")
+    # Prepare data for Prophet (ds = datetime, y = target)
+    prophet_df = pd.DataFrame({
+        'ds': df.index,
+        'y': df['occupancy_rate'].values
+    })
     
     # Configure Prophet
     model = Prophet(
@@ -309,7 +285,7 @@ def train_all_models(connection):
     trained_count = 0
     
     for park_id in PARKS:
-        # try:
+        try:
             # Load data
             df = load_park_data(connection, park_id, days_back=60)
             if df is None or len(df) < 100:
@@ -329,8 +305,8 @@ def train_all_models(connection):
             save_model(model, park_id, max_occupancy)
             trained_count += 1
             
-        # except Exception as e:
-        #     print(f"[{park_id}] Error during training: {e}")
+        except Exception as e:
+            print(f"[{park_id}] Error during training: {e}")
     
     duration = time.time() - start_time
     print(f"\nTraining Complete: {trained_count}/{len(PARKS)} models trained in {duration:.1f}s")
@@ -341,7 +317,6 @@ def train_all_models(connection):
 
 def make_predictions(connection, predictions_connection, predictions_cursor):    
     prediction_time = datetime.datetime.now()
-    prediction_anchor = pd.Timestamp(prediction_time).floor(f'{PREDICTION_INTERVAL_MINUTES}min')
     predictions_list = []
     
     for park_id in PARKS:
@@ -380,18 +355,6 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
                     'y': [current_occupancy_rate]
                 })
                 context_df = pd.concat([context_df, current_point], ignore_index=True)
-
-            # Ensure Prophet input has unique timestamps and valid values.
-            context_df['ds'] = pd.to_datetime(context_df['ds'], errors='coerce')
-            context_df['y'] = pd.to_numeric(context_df['y'], errors='coerce')
-            context_df = context_df.replace([np.inf, -np.inf], np.nan)
-            context_df = context_df.dropna(subset=['ds', 'y'])
-            context_df = context_df.sort_values('ds')
-            context_df = context_df.groupby('ds', as_index=False).agg(y=('y', 'mean'))
-
-            if len(context_df) < 10:
-                print(f"[{park_id}] Insufficient clean context data for prediction")
-                continue
             
             # Refit model with current data to ensure smooth continuity
             model = Prophet(
@@ -406,26 +369,18 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
             
             # Generate forecast
             future_periods = (PREDICTION_HORIZON_HOURS * 60) // PREDICTION_INTERVAL_MINUTES
-            anchor_ts = max(
-                prediction_anchor,
-                pd.Timestamp(current_state['timestamp']),
-                pd.Timestamp(context_df['ds'].max())
-            )
-            future_times = pd.date_range(
-                start=anchor_ts + pd.Timedelta(minutes=PREDICTION_INTERVAL_MINUTES),
-                periods=future_periods,
-                freq=f'{PREDICTION_INTERVAL_MINUTES}min'
-            )
-            future = pd.DataFrame({'ds': future_times})
+            future = model.make_future_dataframe(periods=future_periods, freq=f'{PREDICTION_INTERVAL_MINUTES}min')
             forecast = model.predict(future)
             
             # Calculate offset to ensure continuity between current and first prediction
-            if len(forecast) == 0:
+            # Find the forecast value at or right after the current timestamp
+            future_forecast = forecast[forecast['ds'] > current_state['timestamp']].copy()
+            if len(future_forecast) == 0:
                 print(f"[{park_id}] No future forecast available")
                 continue
             
             # Get the first future prediction to calculate offset
-            first_future_rate = np.clip(forecast.iloc[0]['yhat'], 0, 1)
+            first_future_rate = np.clip(future_forecast.iloc[0]['yhat'], 0, 1)
             # Offset = difference between current observed rate and first predicted rate
             rate_offset = current_occupancy_rate - first_future_rate
             
@@ -441,7 +396,7 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
             })
             
             # Then add future predictions with offset applied for continuity
-            for _, row in forecast.iterrows():
+            for _, row in future_forecast.iterrows():
                 target_time = pd.to_datetime(row['ds'])
                 
                 # Apply offset to make predictions continuous with current observation
