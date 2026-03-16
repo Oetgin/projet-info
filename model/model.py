@@ -238,12 +238,22 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
 
 
 
-def train_prophet_model(df: pd.DataFrame) -> Tuple[Prophet, float]:    
-    # Prepare data for Prophet (ds = datetime, y = target)
+def prepare_prophet_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     prophet_df = pd.DataFrame({
-        'ds': df.index,
-        'y': df['occupancy_rate'].values
+        'ds': pd.to_datetime(df.index, errors='coerce'),
+        'y': pd.to_numeric(df['occupancy_rate'], errors='coerce')
     })
+
+    prophet_df = prophet_df.dropna(subset=['ds', 'y'])
+    prophet_df = prophet_df.sort_values('ds')
+
+    return prophet_df.reset_index(drop=True)
+
+
+def train_prophet_model(df: pd.DataFrame, park_id: str) -> Tuple[Prophet, float]:    
+    prophet_df = prepare_prophet_dataframe(df)
+    if len(prophet_df) < 100:
+        raise ValueError(f"insufficient clean samples for Prophet: {len(prophet_df)}")
     
     # Configure Prophet
     model = Prophet(
@@ -313,7 +323,7 @@ def train_all_models(connection):
                 continue
             
             # Train
-            model, max_occupancy = train_prophet_model(df_processed)
+            model, max_occupancy = train_prophet_model(df_processed, park_id)
             
             # Save
             save_model(model, park_id, max_occupancy)
@@ -370,6 +380,18 @@ def make_predictions(connection, predictions_connection, predictions_cursor):
                     'y': [current_occupancy_rate]
                 })
                 context_df = pd.concat([context_df, current_point], ignore_index=True)
+
+            # Ensure Prophet input has unique timestamps and valid values.
+            context_df['ds'] = pd.to_datetime(context_df['ds'], errors='coerce')
+            context_df['y'] = pd.to_numeric(context_df['y'], errors='coerce')
+            context_df = context_df.replace([np.inf, -np.inf], np.nan)
+            context_df = context_df.dropna(subset=['ds', 'y'])
+            context_df = context_df.sort_values('ds')
+            context_df = context_df.groupby('ds', as_index=False).agg(y=('y', 'mean'))
+
+            if len(context_df) < 10:
+                print(f"[{park_id}] Insufficient clean context data for prediction")
+                continue
             
             # Refit model with current data to ensure smooth continuity
             model = Prophet(
