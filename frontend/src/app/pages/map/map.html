@@ -30,6 +30,10 @@
       </div>
     </div>
 
+    <p class="distance" *ngIf="selectedParking.distance">
+      📍 {{ selectedParking.distance | number:'1.0-2' }} km de votre position
+    </p>
+
     <div class="card-footer">
       Voir les détails →
     </div>

@@ -22,6 +22,7 @@ export class MapComponent implements OnInit, AfterViewInit {
     free: number;
     total: number;
     status: string;
+    distance?: number;
   };
 
   constructor(
@@ -110,7 +111,7 @@ export class MapComponent implements OnInit, AfterViewInit {
         { icon: this.getUserIcon() }
       )
       .addTo(this.map)
-      .bindPopup("📍 Vous êtes ici")
+      .bindPopup(" Vous êtes ici")
       .openPopup();
   
       // cercle autour de l'utilisateur
@@ -120,8 +121,10 @@ export class MapComponent implements OnInit, AfterViewInit {
         fillColor: '#3b82f6',
         fillOpacity: 0.2
       }).addTo(this.map);
-  
+      this.findClosestParkings(lat, lng);
+      this.cdr.detectChanges();
     });
+    
   
   }
   getUserIcon() {
@@ -133,7 +136,41 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
+  calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 
+    const R = 6371; // rayon de la Terre en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+  
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+    this.cdr.detectChanges();
+  }
+  
+  findClosestParkings(userLat: number, userLng: number) {
+
+    PARKINGS.forEach(parking => {
+  
+      const distance = this.calculateDistance(
+        userLat,
+        userLng,
+        parking.lat,
+        parking.lng
+      );
+  
+      // on ajoute la distance directement dans le parking
+      (parking as any).distance = distance;
+  
+    });
+  
+  }
 
 
 }
