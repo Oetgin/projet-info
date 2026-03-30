@@ -84,6 +84,8 @@ def load_park_data(connection, park_id: str, days_back: int = 60) -> pd.DataFram
     
     df = pd.read_sql(query, connection)
     
+    print(f"[{park_id}] Loaded {len(df)} records from database for {park_id} (since {cutoff_date})")
+
     if len(df) == 0:
         return None
     
@@ -146,6 +148,7 @@ def get_current_park_state(connection, park_id: str) -> dict | None:
     cursor.close()
 
     if not row:
+        print(f"[{park_id}] Warning: No open state found")
         return None
 
     try:
@@ -154,6 +157,8 @@ def get_current_park_state(connection, park_id: str) -> dict | None:
         occupied = float(row[2])
         free_slots = capacity - occupied
         
+        print(f"[{park_id}] Current state: {occupied}/{capacity} occupied, {free_slots} free")
+
         return {
             'timestamp': timestamp,
             'capacity': capacity,
@@ -218,7 +223,7 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
         print(f"[{park_id}] Warning: No data after preprocessing")
         return None
     
-    print(f"[{park_id}] Preprocessed: {len(df_resampled)} samples (removed {closed_count} closed records)")
+    print(f"[{park_id}] Preprocessed: {len(df_resampled)} samples for {park_id} (removed {closed_count} closed records)")
     
     return df_resampled
 
@@ -285,28 +290,25 @@ def train_all_models(connection):
     trained_count = 0
     
     for park_id in PARKS:
-        try:
-            # Load data
-            df = load_park_data(connection, park_id, days_back=60)
-            if df is None or len(df) < 100:
-                print(f"[{park_id}] Skipped: insufficient data")
-                continue
-            
-            # Preprocess
-            df_processed = preprocess_park_data(df, park_id)
-            if df_processed is None or len(df_processed) < 100:
-                print(f"[{park_id}] Skipped: insufficient data after preprocessing")
-                continue
-            
-            # Train
-            model, max_occupancy = train_prophet_model(df_processed, park_id)
-            
-            # Save
-            save_model(model, park_id, max_occupancy)
-            trained_count += 1
-            
-        except Exception as e:
-            print(f"[{park_id}] Error during training: {e}")
+        # Load data
+        df = load_park_data(connection, park_id, days_back=60)
+        if df is None or len(df) < 100:
+            print(f"[{park_id}] Skipped: insufficient data")
+            continue
+        
+        # Preprocess
+        df_processed = preprocess_park_data(df, park_id)
+        if df_processed is None or len(df_processed) < 100:
+            print(f"[{park_id}] Skipped: insufficient data after preprocessing")
+            continue
+        
+        # Train
+        model, max_occupancy = train_prophet_model(df_processed, park_id)
+        
+        # Save
+        save_model(model, park_id, max_occupancy)
+        trained_count += 1
+        
     
     duration = time.time() - start_time
     print(f"\nTraining Complete: {trained_count}/{len(PARKS)} models trained in {duration:.1f}s")
