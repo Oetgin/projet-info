@@ -1,11 +1,14 @@
 /* ===== App Container ===== */
 .app {
-  position: relative;
+  /* position: relative; */
   height: 100vh;
   overflow: hidden;
   font-family: Inter, system-ui, sans-serif;
   background: #f5f7fa;
+  /* background: rgb(235, 235, 235); */
 }
+
+
 
 /* ===== Header ===== */
 .top-bar {
@@ -13,7 +16,7 @@
   top: 0;
   width: 100%;
   padding: 18px 20px;
-  background: white;
+  /* background: white; */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,7 +32,9 @@
 
 .city {
   font-size: 14px;
-  color: #777;
+  /* color: #777; */
+
+  color: #000000;
 }
 
 /* ===== Map ===== */
@@ -67,6 +72,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: #000000;
 }
 
 .card-header h3 {

@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
 import { ParkingService } from '../../services/parking.service';
+import { ButtonModule } from 'primeng/button';
 
 
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ButtonModule],
   templateUrl: './map.html',
   styleUrls: ['./map.css'],
 })
