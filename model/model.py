@@ -206,7 +206,7 @@ def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
     end_time = df_open['lastupdate'].max()
     
     full_index = pd.date_range(start=start_time, end=end_time, freq=RESAMPLE_FREQUENCY)
-    df_resampled = df_open.set_index('lastupdate').reindex(full_index)
+    df_resampled = df_open.set_index('lastupdate').reindex(full_index).drop_duplicates(subset='lastupdate', keep='last')
     
     # Forward fill missing values (with limit)
     df_resampled['occupancy_rate'] = df_resampled['occupancy_rate'].ffill(limit=MAX_FORWARD_FILL)
