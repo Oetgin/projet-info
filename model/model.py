@@ -235,6 +235,9 @@ def train_prophet_model(df: pd.DataFrame, park_id: str) -> Tuple[Prophet, float]
         'ds': df.index,
         'y': df['occupancy_rate'].values
     })
+
+    print(f"[{park_id}] Training Prophet model on {len(prophet_df)} samples")
+    print(prophet_df)
     
     # Configure Prophet
     model = Prophet(
