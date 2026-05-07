@@ -1,139 +1,408 @@
-/* ===== App Container ===== */
+/* ===== App container ===== */
 .app {
-  /* position: relative; */
+  position: relative;
+  width: 100%;
   height: 100vh;
   overflow: hidden;
   font-family: Inter, system-ui, sans-serif;
-  background: #f5f7fa;
-  /* background: rgb(235, 235, 235); */
+  background: transparent;
 }
 
-
-
-/* ===== Header ===== */
-.top-bar {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  padding: 18px 20px;
-  /* background: white; */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-}
-
-.top-bar h1 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.city {
-  font-size: 14px;
-  /* color: #777; */
-
-  color: #000000;
-}
-
-/* ===== Map ===== */
+/* ===== Carte Leaflet plein écran ===== */
 #map {
   position: absolute;
-  top: 60px;   /* hauteur du header */
-  bottom: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 1;
 }
 
-/* IMPORTANT : force Leaflet à rester sous la card */
 .leaflet-container {
   z-index: 1 !important;
 }
 
-/* ===== Bottom Card ===== */
-.card {
+/* ===== Overlay supérieur flottant ===== */
+.top-overlay {
   position: absolute;
-  bottom: 20px;
+  top: 16px;
   left: 16px;
   right: 16px;
-  z-index: 2000;
-  background: white;
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  animation: slideUp 0.3s ease;
-}
-
-/* ===== Card Header ===== */
-.card-header {
+  z-index: 1000;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  pointer-events: none;
+}
+
+/* ===== Recherche ===== */
+.search-panel {
+  width: 100%;
+  max-width: 420px;
+  pointer-events: auto;
+}
+
+.search-box {
+  position: relative;
+  display: flex;
   align-items: center;
-  color: #000000;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  padding: 8px 12px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.search-icon-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: #2563eb;
+  flex-shrink: 0;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 42px;
+  border: none;
+  outline: none;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 0 14px 0 38px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+/* ===== Autocomplete ===== */
+.autocomplete-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  z-index: 2000;
+}
+
+.autocomplete-item {
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  border: none;
+  background: white;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.autocomplete-item:hover {
+  background: #f8fafc;
+}
+
+/* ===== Boutons et filtres à droite ===== */
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+
+.floating-panel {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(8px);
+  overflow: hidden;
+}
+
+.filters-panel {
+  padding: 0 6px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.filter-item input {
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+}
+
+.actions-panel {
+  padding: 0 4px;
+}
+
+.action-btn,
+.icon-btn {
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.icon-btn {
+  padding: 0 16px;
+}
+
+.action-btn:hover,
+.icon-btn:hover,
+.filter-item:hover {
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.divider {
+  width: 1px;
+  height: 26px;
+  background: #e5e7eb;
+}
+
+/* ===== Carte de détail en bas ===== */
+.card {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
+  z-index: 1000;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.12);
+  padding: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .card-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-/* ===== Badge ===== */
 .badge {
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.green {
-  background: #e6f4ea;
-  color: #137333;
+.badge.green {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.orange {
-  background: #fff4e5;
-  color: #b26a00;
+.badge.orange {
+  background: #ffedd5;
+  color: #c2410c;
 }
 
-.red {
-  background: #fdecea;
-  color: #b00020;
+.badge.red {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
-/* ===== Progress Bar ===== */
 .progress-wrapper {
-  margin-top: 14px;
-  height: 6px;
-  background: #eee;
-  border-radius: 6px;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
   overflow: hidden;
+  margin-bottom: 12px;
 }
 
 .progress {
   height: 100%;
-  background: linear-gradient(90deg, #4caf50, #ff9800, #f44336);
-  transition: width 0.4s ease;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
 }
 
-/* ===== Footer ===== */
-.card-footer {
-  margin-top: 14px;
+.distance {
+  margin: 0 0 10px;
+  color: #64748b;
   font-size: 14px;
-  color: #666;
 }
 
-/* ===== Animation ===== */
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
+.card-footer {
+  color: #2563eb;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* ===== Icônes markers ===== */
+.custom-marker-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.custom-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  transform: translateZ(0);
+}
+
+.custom-marker svg {
+  display: block;
+  margin: auto;
+}
+
+.custom-marker.car {
+  background: #3b82f6;
+}
+
+.custom-marker.bike {
+  background: #22c55e;
+}
+
+.user-marker-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.user-marker-pulse {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.22);
+  animation: pulse 1.8s infinite;
+}
+
+.user-marker-dot {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #2563eb;
+  border: 2px solid white;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.85;
+  }
+  70% {
+    transform: scale(1.8);
     opacity: 0;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .top-overlay {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-panel {
+    max-width: 100%;
+  }
+
+  .controls-row {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 640px) {
+  .top-overlay {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    gap: 10px;
+  }
+
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .floating-panel {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .filter-item,
+  .action-btn,
+  .icon-btn {
+    font-size: 13px;
+  }
+
+  .card {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
   }
 }
