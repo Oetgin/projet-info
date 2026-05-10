@@ -1,2 +1,4 @@
 prophet==1.2.1
 mysql-connector-python==9.4.0
+pandas<3
+numpy<2.4

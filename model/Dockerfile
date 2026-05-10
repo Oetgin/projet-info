@@ -1,4 +1,4 @@
-FROM python:slim
+FROM python:3.12-slim
 # Can't use alpine because prophet need some specific build tools
 
 WORKDIR /usr/src/app

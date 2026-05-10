@@ -189,42 +189,56 @@ def store_predictions(predictions_connection, predictions_cursor, predictions: p
 
 
 
-def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:    
+def preprocess_park_data(df: pd.DataFrame, park_id: str) -> pd.DataFrame | None:
     # Filter out closed periods
     df_open = df[df['etatouverture'] == 'OUVERT'].copy()
     closed_count = len(df) - len(df_open)
-    
+
     if len(df_open) == 0:
         print(f"[{park_id}] Warning: No open records found")
         return None
-    
-    # Create time index
+
+    # Prepare datetime index
     df_open['lastupdate'] = pd.to_datetime(df_open['lastupdate'])
     df_open = df_open.sort_values('lastupdate')
-    
-    start_time = df_open['lastupdate'].min()
-    end_time = df_open['lastupdate'].max()
-    
-    full_index = pd.date_range(start=start_time, end=end_time, freq=RESAMPLE_FREQUENCY)
-    df_resampled = df_open.set_index('lastupdate').reindex(full_index).drop_duplicates(subset='lastupdate', keep='last')
-    
-    # Forward fill missing values (with limit)
-    df_resampled['occupancy_rate'] = df_resampled['occupancy_rate'].ffill(limit=MAX_FORWARD_FILL)
-    df_resampled['capacitesoliste'] = df_resampled['capacitesoliste'].ffill(limit=MAX_FORWARD_FILL)
-    
+
+    # Remove duplicate timestamps
+    df_open = df_open.drop_duplicates(subset='lastupdate', keep='last')
+
+    # Set datetime index
+    df_open = df_open.set_index('lastupdate')
+
+    # Resample
+    df_resampled = df_open.resample(RESAMPLE_FREQUENCY).last()
+
+    # Forward fill missing values
+    df_resampled['occupancy_rate'] = (
+        df_resampled['occupancy_rate'].ffill(limit=MAX_FORWARD_FILL)
+    )
+
+    df_resampled['capacitesoliste'] = (
+        df_resampled['capacitesoliste'].ffill(limit=MAX_FORWARD_FILL)
+    )
+
     # Remove remaining NaN
     df_resampled = df_resampled.dropna(subset=['occupancy_rate'])
-    
+
     # Drop first day
+    start_time = df_open.index.min()
     first_day_end = start_time + pd.Timedelta(days=1)
+
     df_resampled = df_resampled[df_resampled.index > first_day_end]
-    
+
     if len(df_resampled) == 0:
         print(f"[{park_id}] Warning: No data after preprocessing")
         return None
-    
-    print(f"[{park_id}] Preprocessed: {len(df_resampled)} samples for {park_id} (removed {closed_count} closed records)")
-    
+
+    print(
+        f"[{park_id}] Preprocessed: "
+        f"{len(df_resampled)} samples for {park_id} "
+        f"(removed {closed_count} closed records)"
+    )
+
     return df_resampled
 
 
@@ -249,6 +263,14 @@ def train_prophet_model(df: pd.DataFrame, park_id: str) -> Tuple[Prophet, float]
         interval_width=0.95
     )
     
+    # Debugging
+    print(prophet_df.index.has_duplicates)
+    print(prophet_df['ds'].duplicated().sum())
+    print(prophet_df['ds'].dtype)
+    print(prophet_df.head())
+
+    assert not prophet_df['ds'].duplicated().any()
+
     # Train
     model.fit(prophet_df)
     
