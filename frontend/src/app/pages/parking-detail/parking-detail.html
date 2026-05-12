@@ -1,42 +1,60 @@
 <div class="detail-wrapper" *ngIf="parking">
-
-    <button class="back-btn" (click)="goBack()">← Retour</button>
-    <button (click)="goToPredictions()">
-      Voir les prévisions →
-    </button>
-  
-    <div class="card">
-  
-      <h2>{{ parking.name }}</h2>
-  
-      <span class="badge"
-            [ngClass]="{
-              'badge-open': parking.status === 'Disponible',
-              'badge-full': parking.status === 'Complet'
-            }">
-        {{ parking.status }}
+  <div class="panel-top">
+    <div class="type-chip">
+      <div class="type-chip__icon">
+        <span>{{ parking.type === 'bike' ? '🚲' : '🚗' }}</span>
+      </div>
+      <span class="type-chip__label">
+        {{ parking.type === 'bike' ? 'Bike Parking' : 'Car Parking' }}
       </span>
-  
-      <div class="stats">
-        <div class="stat">
-          <span class="label">Places disponibles</span>
-          <span class="value">{{ parking.free }}</span>
-        </div>
-  
-        <div class="stat">
-          <span class="label">Capacité totale</span>
-          <span class="value">{{ parking.total }}</span>
-        </div>
-      </div>
-  
-      <div class="progress-container">
-        <div class="progress-bar"
-             [style.width.%]="occupancyRate">
-        </div>
-      </div>
-  
-      <p class="rate">{{ occupancyRate }}% occupé</p>
-  
     </div>
-  
+
+    <button class="close-btn" (click)="closePanel()" aria-label="Fermer">×</button>
   </div>
+
+  <div class="hero">
+    <h2>{{ parking.name }}</h2>
+    <p class="meta">Ref ID: {{ parking.id | uppercase }}</p>
+    <p class="updated">Updated: Mar 3, 15:58</p>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ parking.free }}</div>
+      <div class="stat-label">Available</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-value">{{ parking.total }}</div>
+      <div class="stat-label">Total Capacity</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <span class="section-title">CURRENT STATUS</span>
+
+    <span
+      class="status-pill"
+      [ngClass]="{
+        'status-pill--open': parking.status === 'Disponible',
+        'status-pill--full': parking.status === 'Complet',
+      }"
+    >
+      {{ statusLabel }}
+      ({{ parking.status === 'Disponible' ? occupancyRate : 100 }}%)
+    </span>
+  </div>
+
+  <div class="info-card">
+    <div class="info-icon">i</div>
+    <p>
+      {{
+        parking.free > 20
+          ? 'This parking currently has good availability.'
+          : parking.free > 5
+            ? 'Availability is limited. Consider leaving a bit earlier.'
+            : 'This parking may become full very soon. Plan accordingly.'
+      }}
+    </p>
+  </div>
+</div>

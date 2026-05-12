@@ -1,6 +1,15 @@
 <div class="app">
   <!-- Zone carte Leaflet en plein écran -->
   <div id="map"></div>
+  <div class="map-dim" *ngIf="showDetailPanel" (click)="showDetailPanel = false"></div>
+
+  <!-- Details Panel -->
+  <aside class="detail-panel open" *ngIf="showDetailPanel && selectedParking">
+    <app-parking-detail
+      [parking]="selectedParking"
+      (close)="showDetailPanel = false"
+    ></app-parking-detail>
+  </aside>
 
   <!-- Overlay supérieur : recherche à gauche + filtres à droite -->
   <header class="top-overlay">
@@ -77,11 +86,7 @@
       <!-- Filtre véhicules -->
       <div class="floating-panel filters-panel">
         <label class="filter-item">
-          <input
-            type="checkbox"
-            [checked]="showCars"
-            (change)="toggleCars($event)"
-          />
+          <input type="checkbox" [checked]="showCars" (change)="toggleCars($event)" />
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
             <path
               fill="oklch(48.8% 0.243 264.376)"
@@ -94,11 +99,7 @@
         <div class="divider"></div>
 
         <label class="filter-item">
-          <input
-            type="checkbox"
-            [checked]="showBikes"
-            (change)="toggleBikes($event)"
-          />
+          <input type="checkbox" [checked]="showBikes" (change)="toggleBikes($event)" />
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
             <path
               fill="oklch(48.8% 0.243 150)"
@@ -113,7 +114,13 @@
       <div class="floating-panel actions-panel">
         <button type="button" class="action-btn" (click)="locateUser()">
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 13.5 21 3m0 0h-6.75M21 3v6.75"/>
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.5 13.5 21 3m0 0h-6.75M21 3v6.75"
+            />
           </svg>
           <span>Locate Me</span>
         </button>
@@ -128,8 +135,18 @@
 
         <button type="button" class="icon-btn" aria-label="Settings">
           <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.34 2.37a1 1 0 0 1 1.32 0l.77.67a1 1 0 0 0 1.1.17l.94-.47a1 1 0 0 1 1.4.73l.13 1.01a1 1 0 0 0 .77.85l1 .23a1 1 0 0 1 .66 1.43l-.47.93a1 1 0 0 0 .16 1.1l.68.78a1 1 0 0 1 0 1.31l-.68.78a1 1 0 0 0-.16 1.1l.47.94a1 1 0 0 1-.66 1.42l-1 .24a1 1 0 0 0-.77.84l-.13 1.01a1 1 0 0 1-1.4.74l-.94-.48a1 1 0 0 0-1.1.17l-.77.67a1 1 0 0 1-1.32 0l-.77-.67a1 1 0 0 0-1.1-.17l-.94.48a1 1 0 0 1-1.4-.74l-.13-1.01a1 1 0 0 0-.77-.84l-1-.24a1 1 0 0 1-.66-1.42l.47-.94a1 1 0 0 0-.16-1.1l-.68-.78a1 1 0 0 1 0-1.31l.68-.78a1 1 0 0 0 .16-1.1l-.47-.93a1 1 0 0 1 .66-1.43l1-.23a1 1 0 0 0 .77-.85l.13-1.01a1 1 0 0 1 1.4-.73l.94.47a1 1 0 0 0 1.1-.17l.77-.67Z"/>
-            <path stroke="currentColor" stroke-width="2" d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"/>
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M10.34 2.37a1 1 0 0 1 1.32 0l.77.67a1 1 0 0 0 1.1.17l.94-.47a1 1 0 0 1 1.4.73l.13 1.01a1 1 0 0 0 .77.85l1 .23a1 1 0 0 1 .66 1.43l-.47.93a1 1 0 0 0 .16 1.1l.68.78a1 1 0 0 1 0 1.31l-.68.78a1 1 0 0 0-.16 1.1l.47.94a1 1 0 0 1-.66 1.42l-1 .24a1 1 0 0 0-.77.84l-.13 1.01a1 1 0 0 1-1.4.74l-.94-.48a1 1 0 0 0-1.1.17l-.77.67a1 1 0 0 1-1.32 0l-.77-.67a1 1 0 0 0-1.1-.17l-.94.48a1 1 0 0 1-1.4-.74l-.13-1.01a1 1 0 0 0-.77-.84l-1-.24a1 1 0 0 1-.66-1.42l.47-.94a1 1 0 0 0-.16-1.1l-.68-.78a1 1 0 0 1 0-1.31l.68-.78a1 1 0 0 0 .16-1.1l-.47-.93a1 1 0 0 1 .66-1.43l1-.23a1 1 0 0 0 .77-.85l.13-1.01a1 1 0 0 1 1.4-.73l.94.47a1 1 0 0 0 1.1-.17l.77-.67Z"
+            />
+            <path
+              stroke="currentColor"
+              stroke-width="2"
+              d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+            />
           </svg>
         </button>
       </div>
@@ -146,7 +163,7 @@
         [ngClass]="{
           green: selectedParking.free > 50,
           orange: selectedParking.free <= 50 && selectedParking.free > 10,
-          red: selectedParking.free <= 10
+          red: selectedParking.free <= 10,
         }"
       >
         {{ selectedParking.free }} places
@@ -164,6 +181,6 @@
       {{ selectedParking.distance | number: '1.0-2' }} km de votre position
     </p>
 
-    <div class="card-footer">Voir les détails →</div>
+    <div class="card-footer">Voir les détails</div>
   </div>
 </div>

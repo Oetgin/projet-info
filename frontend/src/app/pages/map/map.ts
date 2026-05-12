@@ -5,6 +5,7 @@ import * as L from 'leaflet';
 import { Router } from '@angular/router';
 import { ParkingService } from '../../services/parking.service';
 import { ButtonModule } from 'primeng/button';
+import { ParkingDetailComponent } from "../parking-detail/parking-detail";
 
 type ParkingType = 'car' | 'bike';
 
@@ -23,7 +24,7 @@ interface Parking {
 @Component({
   selector: 'app-map',
   standalone: true,
-  imports: [CommonModule, ButtonModule, FormsModule],
+  imports: [CommonModule, ButtonModule, FormsModule, ParkingDetailComponent],
   templateUrl: './map.html',
   styleUrls: ['./map.css'],
 })
@@ -49,11 +50,13 @@ export class MapComponent implements OnInit, AfterViewInit {
   // Parking sélectionné
   selectedParking!: Parking;
 
+  showDetailPanel = false;
+
   constructor(
     private zone: NgZone,
     private router: Router,
     private parkingService: ParkingService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   // Initialisation Angular
@@ -73,28 +76,27 @@ export class MapComponent implements OnInit, AfterViewInit {
   private initMap(): void {
     this.map = L.map('map', {
       zoomControl: true,
-      attributionControl: true
+      attributionControl: true,
     }).setView([48.1173, -1.6778], 14);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+      attribution: '© OpenStreetMap contributors',
     }).addTo(this.map);
   }
 
   // Recrée les markers selon les cases cochées
   private refreshMarkers(): void {
-    this.visibleMarkers.forEach(marker => this.map.removeLayer(marker));
+    this.visibleMarkers.forEach((marker) => this.map.removeLayer(marker));
     this.visibleMarkers = [];
 
-    PARKINGS.forEach(parking => {
+    PARKINGS.forEach((parking) => {
       const shouldShow =
-        (parking.type === 'car' && this.showCars) ||
-        (parking.type === 'bike' && this.showBikes);
+        (parking.type === 'car' && this.showCars) || (parking.type === 'bike' && this.showBikes);
 
       if (!shouldShow) return;
 
       const marker = L.marker([parking.lat, parking.lng], {
-        icon: this.getMarkerIcon(parking)
+        icon: this.getMarkerIcon(parking),
       })
         .addTo(this.map)
         .bindPopup(parking.name)
@@ -122,7 +124,11 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   // Navigation vers la page détail
   goToDetail(): void {
-    this.router.navigate(['/parking', this.selectedParking.id]);
+    // this.router.navigate(['/parking', this.selectedParking.id]);
+    console.log('OPEN PANEL');
+    
+    this.parkingService.selectedParking = this.selectedParking;
+    this.showDetailPanel = true;
   }
 
   // Sélection centralisée d’un parking
@@ -157,10 +163,10 @@ export class MapComponent implements OnInit, AfterViewInit {
       parking.type === 'bike'
         ? '#22c55e'
         : parking.free < 20
-        ? '#ef4444'
-        : parking.free < 50
-        ? '#f59e0b'
-        : '#3b82f6';
+          ? '#ef4444'
+          : parking.free < 50
+            ? '#f59e0b'
+            : '#3b82f6';
 
     const iconSvg =
       parking.type === 'bike'
@@ -178,8 +184,8 @@ export class MapComponent implements OnInit, AfterViewInit {
           ${iconSvg}
         </div>
       `,
-      iconSize: [40, 40],
-      iconAnchor: [20, 20]
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
     });
   }
 
@@ -190,7 +196,7 @@ export class MapComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(position => {
+    navigator.geolocation.getCurrentPosition((position) => {
       const lat = position.coords.latitude;
       const lng = position.coords.longitude;
 
@@ -204,7 +210,7 @@ export class MapComponent implements OnInit, AfterViewInit {
       }
 
       this.userMarker = L.marker([lat, lng], {
-        icon: this.getUserIcon()
+        icon: this.getUserIcon(),
       })
         .addTo(this.map)
         .bindPopup('Vous êtes ici');
@@ -213,7 +219,7 @@ export class MapComponent implements OnInit, AfterViewInit {
         radius: 200,
         color: '#3b82f6',
         fillColor: '#3b82f6',
-        fillOpacity: 0.15
+        fillOpacity: 0.15,
       }).addTo(this.map);
 
       this.findClosestParkings(lat, lng);
@@ -230,22 +236,22 @@ export class MapComponent implements OnInit, AfterViewInit {
         <div class="user-marker-dot"></div>
       `,
       iconSize: [22, 22],
-      iconAnchor: [11, 11]
+      iconAnchor: [11, 11],
     });
   }
 
   // Calcul de distance entre deux coordonnées
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
 
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
 
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
@@ -253,13 +259,8 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   // Ajoute la distance à chaque parking
   findClosestParkings(userLat: number, userLng: number): void {
-    PARKINGS.forEach(parking => {
-      parking.distance = this.calculateDistance(
-        userLat,
-        userLng,
-        parking.lat,
-        parking.lng
-      );
+    PARKINGS.forEach((parking) => {
+      parking.distance = this.calculateDistance(userLat, userLng, parking.lat, parking.lng);
     });
   }
 
@@ -273,8 +274,8 @@ export class MapComponent implements OnInit, AfterViewInit {
       return;
     }
 
-    this.filteredParkings = PARKINGS.filter(parking =>
-      parking.name.toLowerCase().includes(query)
+    this.filteredParkings = PARKINGS.filter((parking) =>
+      parking.name.toLowerCase().includes(query),
     );
     this.showSuggestions = true;
   }
@@ -304,7 +305,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1173,
     lng: -1.6778,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'charles-de-gaulle',
@@ -314,7 +315,7 @@ const PARKINGS: Parking[] = [
     status: 'Complet',
     lat: 48.1115,
     lng: -1.6805,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'gare-sud',
@@ -324,7 +325,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1059,
     lng: -1.6737,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'colombier',
@@ -334,7 +335,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1048,
     lng: -1.6756,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'hoche',
@@ -344,7 +345,7 @@ const PARKINGS: Parking[] = [
     status: 'Complet',
     lat: 48.1152,
     lng: -1.6689,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'saint-anne',
@@ -354,7 +355,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1158,
     lng: -1.6888,
-    type: 'car'
+    type: 'car',
   },
   {
     id: 'bike-republique',
@@ -364,7 +365,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1112,
     lng: -1.6712,
-    type: 'bike'
+    type: 'bike',
   },
   {
     id: 'bike-saint-anne',
@@ -374,7 +375,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1147,
     lng: -1.6808,
-    type: 'bike'
+    type: 'bike',
   },
   {
     id: 'bike-colombier',
@@ -384,7 +385,7 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1071,
     lng: -1.6838,
-    type: 'bike'
+    type: 'bike',
   },
   {
     id: 'bike-gare',
@@ -394,6 +395,6 @@ const PARKINGS: Parking[] = [
     status: 'Disponible',
     lat: 48.1049,
     lng: -1.6719,
-    type: 'bike'
-  }
+    type: 'bike',
+  },
 ];
