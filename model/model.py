@@ -516,6 +516,7 @@ def main():
             
             print(f"\n[{iteration}] {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             
+            """
             # Check if retraining is needed
             if last_training_time:
                 days_since_training = (datetime.datetime.now() - last_training_time).days
@@ -523,7 +524,10 @@ def main():
                     print(f"{days_since_training} days since last training, retraining models...")
                     if train_all_models(connection):
                         last_training_time = datetime.datetime.now()
-            
+            """
+
+            train_all_models(connection)
+                        
             # Make predictions
             make_predictions(connection, predictions_connection, predictions_cursor)
             
