@@ -14,6 +14,11 @@ export class ParkingDetailComponent {
   @Input() parking: any;
   @Output() close = new EventEmitter<void>();
 
+  constructor(
+    private router: Router,
+    private parkingService: ParkingService,
+  ) {}
+
   get occupancyRate(): number {
     return Math.round(((this.parking.total - this.parking.free) / this.parking.total) * 100);
   }
@@ -24,5 +29,13 @@ export class ParkingDetailComponent {
 
   get statusLabel(): string {
     return this.parking?.status === 'Disponible' ? 'Available' : 'Full';
+  }
+
+  goToPredictions(): void {
+    console.log('goToPredictions called', this.parking);
+    
+    if (!this.parking?.id) return;
+    this.parkingService.selectedParking = this.parking;
+    this.router.navigate(['/predictions', this.parking.id]);
   }
 }

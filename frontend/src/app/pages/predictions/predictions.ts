@@ -54,7 +54,7 @@ export class PredictionsComponent implements AfterViewInit, OnInit {
   // ===== NAVIGATION =====
 
   goBack() {
-    this.router.navigate(['/parking', this.parkingId]);
+    this.router.navigate(['/']);
   }
 
   // ===== KPI =====

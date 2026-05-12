@@ -6,7 +6,7 @@ import { PredictionsComponent } from './pages/predictions/predictions';
 export const routes: Routes = [
   { path: '', redirectTo: 'map', pathMatch: 'full' },
   { path: 'map', component: MapComponent },
-  { path: 'parking/:id', component: ParkingDetailComponent },
-  { path: 'parking/:id/predictions', component: PredictionsComponent }
+  // { path: 'parking/:id', component: ParkingDetailComponent },
+  { path: 'predictions/:id', component: PredictionsComponent }
 ];
 
