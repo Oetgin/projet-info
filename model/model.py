@@ -175,6 +175,14 @@ def store_predictions(predictions_connection, predictions_cursor, predictions: p
     if len(predictions) == 0:
         return
     
+    # Remove previous predictions
+    delete_query = f"""
+        DELETE FROM `predictions`.`predictions`
+    """
+
+    predictions_cursor.execute(delete_query)
+
+    # Insert new predictions
     values = [
         (row['park_id'], row['prediction_time'], row['target_time'], 
          row['prediction'], row['lower_bound'], row['upper_bound'], row['capacity'])
