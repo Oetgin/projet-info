@@ -8,6 +8,6 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 ENV FLASK_APP=backend.py
-CMD ["flask", "run"]
+CMD ["flask", "run", "--host=0.0.0.0"]
 
 LABEL org.opencontainers.image.source=https://github.com/Oetgin/projet-info

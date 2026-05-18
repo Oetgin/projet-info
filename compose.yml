@@ -54,6 +54,8 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    ports:
+      - "5000:5000"
 
 volumes:
   database:
