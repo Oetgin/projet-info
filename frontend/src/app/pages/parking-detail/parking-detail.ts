@@ -1,0 +1,41 @@
+import { Component, EventEmitter, Input, input, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ParkingService } from '../../services/parking.service';
+
+@Component({
+  selector: 'app-parking-detail',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './parking-detail.html',
+  styleUrls: ['./parking-detail.css'],
+})
+export class ParkingDetailComponent {
+  @Input() parking: any;
+  @Output() close = new EventEmitter<void>();
+
+  constructor(
+    private router: Router,
+    private parkingService: ParkingService,
+  ) {}
+
+  get occupancyRate(): number {
+    return Math.round(((this.parking.total - this.parking.free) / this.parking.total) * 100);
+  }
+
+  closePanel() {
+    this.close.emit();
+  }
+
+  get statusLabel(): string {
+    return this.parking?.status === 'Disponible' ? 'Available' : 'Full';
+  }
+
+  goToPredictions(): void {
+    console.log('goToPredictions called', this.parking);
+    
+    if (!this.parking?.id) return;
+    this.parkingService.selectedParking = this.parking;
+    this.router.navigate(['/predictions', this.parking.id]);
+  }
+}
