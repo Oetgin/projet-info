@@ -1,0 +1,277 @@
+.detail-wrapper {
+  min-height: 100%;
+  padding: 28px 24px 32px;
+  box-sizing: border-box;
+  background: #ffffff;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  color: #0f172a;
+}
+
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: 999px;
+  background: #f8fafc;
+}
+
+/* .type-chip__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #dcfce7;
+  font-size: 18px;
+} */
+
+/* .type-chip__label {
+  padding-right: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+} */
+/* .type-chip__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #dcfce7;
+  color: #16a34a;
+  flex-shrink: 0;
+}
+
+.type-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+} */
+
+.type-chip__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.type-chip__icon--car {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.type-chip__icon--bike {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.type-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.type-icon--car {
+  color: #2563eb;
+}
+
+.panel-actions {
+  margin-top: 20px;
+}
+
+.predict-btn {
+  width: 100%;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  background: #111827;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  box-shadow: 0 10px 24px rgba(17, 24, 39, 0.18);
+}
+
+.predict-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.22);
+}
+
+.predict-btn:active {
+  transform: translateY(0);
+}
+
+.predict-btn:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+/* .type-icon--bike {
+  color: #16a34a;
+} */
+
+/* .type-chip__icon--car {
+  background: #dbeafe;
+  color: #2563eb;
+} */
+
+/* .type-chip__icon--bike {
+  background: #dcfce7;
+  color: #16a34a;
+} */
+
+.close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  line-height: 1;
+  color: #475569;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+}
+
+.hero {
+  margin-bottom: 28px;
+}
+
+.hero h2 {
+  margin: 0 0 10px;
+  font-size: 40px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.meta {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.updated {
+  margin: 0;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  min-height: 136px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+}
+
+.stat-value {
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 15px;
+  color: #64748b;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.status-pill--open {
+  background: #ecfdf3;
+  color: #15803d;
+  border-color: #22c55e;
+}
+
+.status-pill--full {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #ef4444;
+}
+
+.info-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 16px;
+  border-radius: 16px;
+  background: #f8fbff;
+  border: 1px solid #cfe0ff;
+}
+
+.info-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2563eb;
+  border: 1.5px solid #2563eb;
+  flex-shrink: 0;
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #334155;
+}
