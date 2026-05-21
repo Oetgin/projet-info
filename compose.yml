@@ -57,6 +57,15 @@ services:
     ports:
       - "5000:5000"
 
+  frontend:
+    image: ghcr.io/oetgin/projet-info:frontend-latest
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "80:80"
+
 volumes:
   database:
   grafana:
