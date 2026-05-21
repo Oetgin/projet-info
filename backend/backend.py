@@ -1,8 +1,11 @@
 from flask import Flask, jsonify, request
+from flask_cors import CORS, cross_origin
 import os
 import mysql.connector
 
 app = Flask(__name__)
+cors = CORS(app) # allow CORS for all domains on all routes.
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 def get_db_connection(database: str):
@@ -17,6 +20,7 @@ def get_db_connection(database: str):
 
 
 @app.route("/overview")
+@cross_origin()
 def overview():
     """
     Return the total number of parking spaces, the number of occupied spaces, the status, and the last update time for each parking lot.
@@ -58,6 +62,7 @@ def overview():
 
 
 @app.route("/history/<parc_id>")
+@cross_origin()
 def history(parc_id):
     """
     Return the parking history for a specific parking lot.
@@ -107,6 +112,7 @@ def history(parc_id):
 
 
 @app.route("/predictions/<parc_id>")
+@cross_origin()
 def predictions(parc_id):
     """
     Return the parking predictions for a specific parking lot.
