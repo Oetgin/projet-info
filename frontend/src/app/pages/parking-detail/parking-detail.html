@@ -33,25 +33,6 @@
 
     <div class="hero">
       <h2 class="parking-name">{{ parking.name }}</h2>
-      <div class="route-block">
-        <div>
-          <div class="route-label">Itinéraire</div>
-          <p class="route-text" *ngIf="routeAvailable">
-            Votre position est connue, voici la distance vers ce parking.
-          </p>
-          <p class="route-text empty" *ngIf="!routeAvailable">
-            Localisez-vous pour afficher la distance et l'itinéraire.
-          </p>
-        </div>
-        <div class="route-actions">
-          <span class="route-distance" *ngIf="routeDistance !== null">
-            {{ routeDistance | number: '1.1-1' }} km
-          </span>
-          <button class="route-button" type="button" *ngIf="routeAvailable" (click)="openRoute()">
-            Ouvrir l'itinéraire
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -98,23 +79,20 @@
           <p class="chart-subtitle">Derniers instants mesurés</p>
         </div>
       </div>
+
       <div class="chart-container">
-        <canvas id="historyChart"></canvas>
-      </div>
-      <div class="prediction-list" *ngIf="previewHistory.length > 0">
-        <div class="prediction-row" *ngFor="let item of previewHistory">
-          <div>
-            <span class="prediction-time">{{ item.time | date: 'HH:mm' }}</span>
-            <span class="prediction-status">{{ item.occupied_spaces }} places occupées</span>
-          </div>
-          <div class="prediction-range">
-            <strong>{{ item.total_spaces }} places</strong>
-          </div>
+        <div class="chart-shell">
+          <canvas #historyCanvas></canvas>
+        </div>
+        <div class="chart-loading" *ngIf="isLoadingHistory">Chargement historique...</div>
+        <div class="chart-empty" *ngIf="!isLoadingHistory && historyLoaded && history.length === 0">
+          Aucun historique disponible.
         </div>
       </div>
+
       <div class="panel-actions">
         <button class="predict-btn" type="button" (click)="goToHistory()">
-          Voir plus de détails
+          Voir les détails de l'historique
         </button>
       </div>
     </div>
@@ -124,7 +102,7 @@
     <div class="prediction-header">
       <div>
         <h3>Prédictions</h3>
-        <p class="chart-subtitle">Prochaines {{ selectedHorizon }} heures</p>
+        <p class="chart-subtitle">Prochaines {{ horizonLabel }}</p>
       </div>
       <div class="horizon-buttons">
         <button
@@ -134,16 +112,27 @@
           [class.active]="selectedHorizon === hours"
           (click)="selectHorizon(hours)"
         >
-          {{ hours }}h
+          {{ hours === 0.5 ? '30 min' : hours === 1 ? '1h' : hours + 'h' }}
         </button>
       </div>
     </div>
+
     <div class="chart-container">
-      <canvas id="predictionsChart"></canvas>
+      <div class="chart-shell">
+        <canvas #predictionsCanvas></canvas>
+      </div>
+      <div
+        class="chart-empty"
+        *ngIf="!isLoadingPredictions && predictionsLoaded && filteredPredictions.length === 0"
+      >
+        Aucune prédiction disponible.
+      </div>
     </div>
+
     <div class="prediction-summary">
       <span>{{ predictionAdvice }}</span>
     </div>
+
     <div class="prediction-list" *ngIf="filteredPredictions.length > 0">
       <div class="prediction-row" *ngFor="let item of filteredPredictions">
         <div>
@@ -155,14 +144,11 @@
         </div>
       </div>
     </div>
+
     <div class="panel-actions">
       <button class="predict-btn" (click)="goToPredictions()">
         Voir les prédictions détaillées
       </button>
     </div>
-  </div>
-
-  <div class="loading-block" *ngIf="isLoadingHistory || isLoadingPredictions">
-    Chargement des données...
   </div>
 </div>

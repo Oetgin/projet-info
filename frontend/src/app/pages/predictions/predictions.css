@@ -126,7 +126,20 @@ h2 {
 }
 
 .chart-wrap {
+  position: relative;
   height: 220px;
+}
+
+.chart-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: #475569;
+  font-size: 14px;
+  font-weight: 700;
+  z-index: 10;
 }
 
 .advice-box {

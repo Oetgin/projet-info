@@ -1,9 +1,7 @@
 <div class="app">
-  <!-- Zone carte Leaflet en plein écran -->
   <div id="map"></div>
   <div class="map-dim" *ngIf="showDetailPanel" (click)="showDetailPanel = false"></div>
 
-  <!-- Details Panel -->
   <aside class="detail-panel open" *ngIf="showDetailPanel && selectedParking">
     <app-parking-detail
       [parking]="selectedParking"
@@ -11,11 +9,9 @@
     ></app-parking-detail>
   </aside>
 
-  <!-- Overlay supérieur : recherche à gauche + filtres à droite -->
   <header class="top-overlay">
-    <!-- Recherche avec autocomplete -->
     <form class="search-panel" (submit)="$event.preventDefault()">
-      <div class="search-box">
+      <div class="search-box" #searchContainer>
         <div class="search-icon-main">
           <svg
             class="w-6 h-6 text-white"
@@ -62,11 +58,9 @@
             [(ngModel)]="searchTerm"
             name="searchTerm"
             (input)="onSearchChange()"
-            (focus)="showSuggestions = true"
-            (blur)="onSearchBlur()"
+            (focus)="onSearchFocus()"
           />
 
-          <!-- Liste des suggestions autocomplete -->
           <div class="autocomplete-list" *ngIf="showSuggestions && filteredParkings.length > 0">
             <button
               type="button"
@@ -81,9 +75,7 @@
       </div>
     </form>
 
-    <!-- Filtres et actions -->
     <div class="controls-row">
-      <!-- Filtre véhicules -->
       <div class="floating-panel filters-panel">
         <label class="filter-item">
           <input type="checkbox" [checked]="showCars" (change)="toggleCars($event)" />
@@ -109,55 +101,12 @@
           <span>Vélos</span>
         </label>
       </div>
-
-      <!-- Bouton localisation -->
-      <div class="floating-panel actions-panel">
-        <button type="button" class="action-btn" (click)="locateUser()">
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10.5 13.5 21 3m0 0h-6.75M21 3v6.75"
-            />
-          </svg>
-          <span>Locate Me</span>
-        </button>
-
-        <div class="divider"></div>
-
-        <!-- <button type="button" class="action-btn" (click)="focusNearestParking()">
-          <span>Nearest Space</span>
-        </button> -->
-
-        <div class="divider"></div>
-
-        <button type="button" class="icon-btn" aria-label="Settings">
-          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M10.34 2.37a1 1 0 0 1 1.32 0l.77.67a1 1 0 0 0 1.1.17l.94-.47a1 1 0 0 1 1.4.73l.13 1.01a1 1 0 0 0 .77.85l1 .23a1 1 0 0 1 .66 1.43l-.47.93a1 1 0 0 0 .16 1.1l.68.78a1 1 0 0 1 0 1.31l-.68.78a1 1 0 0 0-.16 1.1l.47.94a1 1 0 0 1-.66 1.42l-1 .24a1 1 0 0 0-.77.84l-.13 1.01a1 1 0 0 1-1.4.74l-.94-.48a1 1 0 0 0-1.1.17l-.77.67a1 1 0 0 1-1.32 0l-.77-.67a1 1 0 0 0-1.1-.17l-.94.48a1 1 0 0 1-1.4-.74l-.13-1.01a1 1 0 0 0-.77-.84l-1-.24a1 1 0 0 1-.66-1.42l.47-.94a1 1 0 0 0-.16-1.1l-.68-.78a1 1 0 0 1 0-1.31l.68-.78a1 1 0 0 0 .16-1.1l-.47-.93a1 1 0 0 1 .66-1.43l1-.23a1 1 0 0 0 .77-.85l.13-1.01a1 1 0 0 1 1.4-.73l.94.47a1 1 0 0 0 1.1-.17l.77-.67Z"
-            />
-            <path
-              stroke="currentColor"
-              stroke-width="2"
-              d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-            />
-          </svg>
-        </button>
-      </div>
     </div>
   </header>
 
-  <!-- Carte parking sélectionné -->
   <div class="card" *ngIf="selectedParking" (click)="goToDetail()">
     <div class="card-header">
-      <h3>{{ selectedParking.name }}</h3>
-
+      <div class="card-title">{{ selectedParking.name }}</div>
       <span
         class="badge"
         [ngClass]="{
@@ -170,18 +119,31 @@
       </span>
     </div>
 
-    <div class="progress-wrapper">
-      <div
-        class="progress"
-        [style.width.%]="(selectedParking.free / selectedParking.total) * 100"
-      ></div>
+    <div class="card-body">
+      <div class="availability-row">
+        <div>
+          <div class="available-value">{{ selectedParking.free }}</div>
+          <div class="available-label">places disponibles</div>
+        </div>
+        <div class="capacity-label">sur {{ selectedParking.total }} places</div>
+      </div>
+
+      <div class="progress-wrapper">
+        <div
+          class="progress"
+          [style.width.%]="
+            selectedParking.total ? (selectedParking.free / selectedParking.total) * 100 : 0
+          "
+        ></div>
+      </div>
+
+      <div class="progress-meta">
+        <span>{{ selectedParking.free }}/{{ selectedParking.total }}</span>
+        <span>{{ (selectedParking.free / selectedParking.total) * 100 | number: '1.0-0' }}%</span>
+      </div>
     </div>
 
-    <p class="distance" *ngIf="selectedParking.distance">
-      {{ selectedParking.distance | number: '1.0-2' }} km de votre position
-    </p>
-
-    <button type="button" class="card-footer">Voir les détails</button>
+    <div class="card-footer">Voir les détails</div>
   </div>
 
   <section class="remote-summary" *ngIf="remoteParkings.length">

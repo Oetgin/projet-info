@@ -59,11 +59,17 @@ const PARKING_META: Record<string, { name: string; lat: number; lng: number }> =
 export class ParkingService {
   selectedParking: Parking | null = null;
   userLocation: { lat: number; lng: number } | null = null;
+  // timestamp de référence (ISO) correspondant au moment du clic utilisateur
+  referenceTime?: string;
 
   constructor(private http: HttpClient) {}
 
   setUserLocation(lat: number, lng: number): void {
     this.userLocation = { lat, lng };
+  }
+
+  setReferenceTime(iso: string): void {
+    this.referenceTime = iso;
   }
 
   getDrivingDirectionsUrl(parking: Parking): string {
@@ -75,6 +81,15 @@ export class ParkingService {
     return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(
       origin,
     )}&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+  }
+
+  normalizeApiTime(value: string): Date {
+    if (!value) {
+      return new Date(value);
+    }
+    const utcFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/;
+    const timestamp = utcFormat.test(value) ? `${value}Z` : value;
+    return new Date(timestamp);
   }
 
   getRemoteParkings(): Observable<Parking[]> {
@@ -105,11 +120,19 @@ export class ParkingService {
     );
   }
 
-  getHistory(parkId: string, limit = 100): Observable<HistoryRecord[]> {
-    return this.http.get<HistoryRecord[]>(`/api/history/${parkId}?limit=${limit}`);
+  getHistory(parkId: string, limit = 100, from?: string): Observable<HistoryRecord[]> {
+    let url = `/api/history/${parkId}?limit=${limit}`;
+    if (from) {
+      url += `&from=${encodeURIComponent(from)}`;
+    }
+    return this.http.get<HistoryRecord[]>(url);
   }
 
-  getPredictions(parkId: string, limit = 48): Observable<PredictionRecord[]> {
-    return this.http.get<PredictionRecord[]>(`/api/predictions/${parkId}?limit=${limit}`);
+  getPredictions(parkId: string, limit = 48, from?: string): Observable<PredictionRecord[]> {
+    let url = `/api/predictions/${parkId}?limit=${limit}`;
+    if (from) {
+      url += `&from=${encodeURIComponent(from)}`;
+    }
+    return this.http.get<PredictionRecord[]>(url);
   }
 }

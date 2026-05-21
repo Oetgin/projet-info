@@ -16,8 +16,8 @@ export class PredictionsComponent implements OnInit, AfterViewInit {
   parkingName = '';
   predictions: PredictionRecord[] = [];
   isLoading = false;
-  selectedHorizon = 6;
-  horizonOptions = [0.5, 1, 3, 6, 12, 24];
+  selectedHorizon = 0.5;
+  horizonOptions = [0.5, 1, 2, 3, 4, 5];
   private chart?: Chart;
   private parkingTotal = 0;
   private parkingFree = 0;
@@ -27,6 +27,36 @@ export class PredictionsComponent implements OnInit, AfterViewInit {
     private route: ActivatedRoute,
     private parkingService: ParkingService,
   ) {}
+
+  private alignTimestampsToRef<T extends { time: string }>(
+    records: T[],
+    refTs: number,
+    mode: 'future' | 'past',
+  ): T[] {
+    if (!records || !records.length) return records;
+
+    const times = records.map((r) => new Date(r.time).getTime());
+    const first = times[0];
+    const last = times[times.length - 1];
+
+    const tolerance = 5 * 60 * 1000; // 5 minutes
+    let offset = 0;
+    if (mode === 'future') {
+      if (first < refTs - tolerance) {
+        offset = refTs - first;
+      }
+    } else {
+      if (last > refTs + tolerance) {
+        offset = refTs - last;
+      }
+    }
+
+    if (offset === 0) return records;
+    return records.map((r) => ({
+      ...r,
+      time: new Date(new Date(r.time).getTime() + offset).toISOString(),
+    }));
+  }
 
   ngOnInit(): void {
     this.parkingId = this.route.snapshot.paramMap.get('id') ?? '';
@@ -46,8 +76,8 @@ export class PredictionsComponent implements OnInit, AfterViewInit {
     if (!this.predictions.length) {
       return [];
     }
-
-    const startTime = new Date(this.predictions[0].time).getTime();
+    const refIso = this.parkingService.referenceTime ?? this.predictions[0].time;
+    const startTime = new Date(refIso).getTime();
     const horizonMs = this.selectedHorizon * 60 * 60 * 1000;
 
     return this.predictions.filter((record) => {
@@ -89,7 +119,10 @@ export class PredictionsComponent implements OnInit, AfterViewInit {
   }
 
   get advice(): string {
-    const next = this.displayPredictions[0]?.predicted_occupied ?? this.predictions[0]?.predicted_occupied ?? 0;
+    const next =
+      this.displayPredictions[0]?.predicted_occupied ??
+      this.predictions[0]?.predicted_occupied ??
+      0;
     if (next >= 80) {
       return 'Affluence élevée prévue : privilégier les parkings alternatifs.';
     }
@@ -129,11 +162,17 @@ export class PredictionsComponent implements OnInit, AfterViewInit {
   private loadPredictions(): void {
     if (!this.parkingId) return;
     this.isLoading = true;
-    this.parkingService.getPredictions(this.parkingId, 48).subscribe({
+    const refIso = this.parkingService.referenceTime ?? new Date().toISOString();
+    const refTs = new Date(refIso).getTime();
+
+    this.parkingService.getPredictions(this.parkingId, 48, refIso).subscribe({
       next: (items: PredictionRecord[]) => {
-        this.predictions = items.sort(
-          (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
-        );
+        // align timestamps if backend timestamps appear shifted relative to ref
+        const aligned = this.alignTimestampsToRef(items, refTs, 'future');
+        // keep records from the reference time forward and order ascending
+        this.predictions = aligned
+          .filter((r) => new Date(r.time).getTime() >= refTs)
+          .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
         this.parkingFree = this.parkingService.selectedParking?.free ?? this.parkingFree;
         this.parkingTotal = this.parkingService.selectedParking?.total ?? this.parkingTotal;
         this.isLoading = false;

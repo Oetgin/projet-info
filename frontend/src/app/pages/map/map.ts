@@ -1,10 +1,19 @@
-import { Component, AfterViewInit, OnInit, NgZone, ChangeDetectorRef } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectorRef,
+  Component,
+  ElementRef,
+  NgZone,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
-import { Parking, ParkingService } from '../../services/parking.service';
 import { ButtonModule } from 'primeng/button';
+import { Parking, ParkingService } from '../../services/parking.service';
 import { ParkingDetailComponent } from '../parking-detail/parking-detail';
 
 @Component({
@@ -14,34 +23,30 @@ import { ParkingDetailComponent } from '../parking-detail/parking-detail';
   templateUrl: './map.html',
   styleUrls: ['./map.css'],
 })
-export class MapComponent implements OnInit, AfterViewInit {
+export class MapComponent implements OnInit, AfterViewInit, OnDestroy {
+  @ViewChild('searchContainer') searchContainer?: ElementRef<HTMLElement>;
+
   private map!: L.Map;
-
-  // Markers visibles sur la carte
   private visibleMarkers: L.Marker[] = [];
-
-  // Marker et cercle utilisateur
   private userMarker?: L.Marker;
   private userCircle?: L.Circle;
+  private removeDocumentClickListener?: () => void;
+  private recenterControl?: L.Control;
 
-  // Filtres d'affichage
+  private readonly defaultCenter: L.LatLngExpression = [48.1173, -1.6778];
+  private readonly defaultZoom = 14;
+  private readonly focusZoom = 17;
+
   showCars = true;
   showBikes = true;
 
-  // Recherche autocomplete
   searchTerm = '';
   showSuggestions = false;
   filteredParkings: Parking[] = [];
 
-  // Parking sélectionné
   selectedParking!: Parking;
-
-  // Données distantes (remote API) - SOURCE UNIQUE
   remoteParkings: Parking[] = [];
-
-  // Loading state
   isLoadingParkings = true;
-
   showDetailPanel = false;
 
   constructor(
@@ -51,15 +56,54 @@ export class MapComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
   ) {}
 
-  // Initialisation Angular
   ngOnInit(): void {
     this.fetchRemoteParkings();
   }
 
-  // Initialisation Leaflet après rendu du DOM
   ngAfterViewInit(): void {
     this.initMap();
     this.locateUser();
+    this.setupOutsideClickListener();
+  }
+
+  ngOnDestroy(): void {
+    if (this.removeDocumentClickListener) {
+      this.removeDocumentClickListener();
+    }
+
+    if (this.map) {
+      this.map.remove();
+    }
+  }
+
+  private setupOutsideClickListener(): void {
+    this.removeDocumentClickListener = this.zone.runOutsideAngular(() =>
+      this.listenDocumentClick(),
+    );
+  }
+
+  private listenDocumentClick(): () => void {
+    const handler = (event: MouseEvent) => {
+      const container = this.searchContainer?.nativeElement;
+      const target = event.target as Node | null;
+
+      if (!container || !target) {
+        return;
+      }
+
+      if (!container.contains(target)) {
+        this.zone.run(() => {
+          this.showSuggestions = false;
+          this.cdr.detectChanges();
+        });
+      }
+    };
+
+    document.addEventListener('click', handler, true);
+
+    return () => {
+      document.removeEventListener('click', handler, true);
+    };
   }
 
   private fetchRemoteParkings(): void {
@@ -68,17 +112,21 @@ export class MapComponent implements OnInit, AfterViewInit {
       next: (items) => {
         this.remoteParkings = items;
         this.filteredParkings = [...items];
+
         if (items.length > 0) {
           this.selectedParking = this.parkingService.selectedParking ?? items[0];
           this.refreshMarkers();
         } else {
           console.warn("Aucun parking récupéré de l'API");
         }
+
         this.isLoadingParkings = false;
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Erreur récupération données distantes :', error);
         this.isLoadingParkings = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -87,20 +135,74 @@ export class MapComponent implements OnInit, AfterViewInit {
     return this.remoteParkings;
   }
 
-  // Création de la carte
   private initMap(): void {
     this.map = L.map('map', {
       zoomControl: true,
       attributionControl: true,
-    }).setView([48.1173, -1.6778], 14);
+    }).setView(this.defaultCenter, this.defaultZoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors',
     }).addTo(this.map);
+
+    this.addRecenterControl();
   }
 
-  // Recrée les markers selon les cases cochées
+  private addRecenterControl(): void {
+    const component = this;
+
+    const RecenterControl = L.Control.extend({
+      options: {
+        position: 'bottomright',
+      },
+
+      onAdd() {
+        const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control recenter-control');
+        const button = L.DomUtil.create('button', 'recenter-btn', container);
+
+        button.type = 'button';
+        button.innerHTML = `
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8zm0-5a1 1 0 0 1 1 1v1.07A7.002 7.002 0 0 1 18.93 11H20a1 1 0 1 1 0 2h-1.07A7.002 7.002 0 0 1 13 18.93V20a1 1 0 1 1-2 0v-1.07A7.002 7.002 0 0 1 5.07 13H4a1 1 0 1 1 0-2h1.07A7.002 7.002 0 0 1 11 5.07V4a1 1 0 0 1 1-1z"/>
+          </svg>
+        `;
+        button.setAttribute('aria-label', 'Recentrer la carte');
+        button.setAttribute('title', 'Recentrer la carte');
+
+        L.DomEvent.disableClickPropagation(container);
+        L.DomEvent.disableScrollPropagation(container);
+
+        L.DomEvent.on(button, 'click', (event: Event) => {
+          L.DomEvent.stop(event);
+          component.zone.run(() => {
+            component.recenterMap();
+          });
+        });
+
+        return container;
+      },
+    });
+
+    this.recenterControl = new RecenterControl();
+    this.recenterControl.addTo(this.map);
+  }
+
+  recenterMap(): void {
+    if (this.selectedParking) {
+      this.map.flyTo([this.selectedParking.lat, this.selectedParking.lng], this.focusZoom, {
+        duration: 0.8,
+      });
+      return;
+    }
+
+    this.map.flyTo(this.defaultCenter, this.defaultZoom, {
+      duration: 0.8,
+    });
+  }
+
   private refreshMarkers(): void {
+    if (!this.map) return;
+
     this.visibleMarkers.forEach((marker) => this.map.removeLayer(marker));
     this.visibleMarkers = [];
 
@@ -115,6 +217,13 @@ export class MapComponent implements OnInit, AfterViewInit {
       })
         .addTo(this.map)
         .bindPopup(parking.name)
+        .bindTooltip(parking.name, {
+          permanent: false,
+          direction: 'top',
+          offset: [0, -18],
+          opacity: 0.96,
+          className: 'parking-marker-tooltip',
+        })
         .on('click', () => {
           this.zone.run(() => {
             this.onParkingSelected(parking);
@@ -125,33 +234,27 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Quand on coche/décoche voitures
   toggleCars(event: Event): void {
     this.showCars = (event.target as HTMLInputElement).checked;
     this.refreshMarkers();
   }
 
-  // Quand on coche/décoche vélos
   toggleBikes(event: Event): void {
     this.showBikes = (event.target as HTMLInputElement).checked;
     this.refreshMarkers();
   }
 
-  // Navigation vers la page détail
   goToDetail(): void {
-    // this.router.navigate(['/parking', this.selectedParking.id]);
-    console.log('OPEN PANEL');
-
+    this.parkingService.setReferenceTime(new Date().toISOString());
     this.parkingService.selectedParking = this.selectedParking;
     this.showDetailPanel = true;
   }
 
-  // Sélection centralisée d’un parking
   private onParkingSelected(parking: Parking): void {
     this.parkingService.selectedParking = parking;
     this.selectedParking = parking;
+    this.parkingService.setReferenceTime(new Date().toISOString());
 
-    // Synchroniser les checkboxes avec le type sélectionné
     if (parking.type === 'car') {
       this.showCars = true;
       this.showBikes = false;
@@ -160,19 +263,17 @@ export class MapComponent implements OnInit, AfterViewInit {
       this.showBikes = true;
     }
 
-    // Mettre à jour la recherche
     this.searchTerm = parking.name;
     this.showSuggestions = false;
 
-    // Recentrer la carte
-    this.map.setView([parking.lat, parking.lng], 16);
+    this.map.flyTo([parking.lat, parking.lng], this.focusZoom, {
+      duration: 0.8,
+    });
 
-    // Recréer les markers selon le type actif
     this.refreshMarkers();
     this.cdr.detectChanges();
   }
 
-  // Icône personnalisée avec carré arrondi symétrique
   private getMarkerIcon(parking: Parking): L.DivIcon {
     const bg =
       parking.type === 'bike'
@@ -205,7 +306,6 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Position utilisateur
   locateUser(): void {
     if (!navigator.geolocation) {
       console.log('Géolocalisation non supportée');
@@ -244,7 +344,6 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Icône utilisateur
   private getUserIcon(): L.DivIcon {
     return L.divIcon({
       className: 'user-marker-wrapper',
@@ -257,7 +356,6 @@ export class MapComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // Calcul de distance entre deux coordonnées
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -274,14 +372,12 @@ export class MapComponent implements OnInit, AfterViewInit {
     return R * c;
   }
 
-  // Ajoute la distance à chaque parking
   findClosestParkings(userLat: number, userLng: number): void {
     this.getDisplayedParkings().forEach((parking) => {
       parking.distance = this.calculateDistance(userLat, userLng, parking.lat, parking.lng);
     });
   }
 
-  // Autocomplete : filtre les résultats
   onSearchChange(): void {
     const query = this.searchTerm.trim().toLowerCase();
 
@@ -297,17 +393,19 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.showSuggestions = true;
   }
 
-  // Sélection autocomplete
+  onSearchFocus(): void {
+    this.filteredParkings = this.searchTerm.trim()
+      ? this.getDisplayedParkings().filter((parking) =>
+          parking.name.toLowerCase().includes(this.searchTerm.trim().toLowerCase()),
+        )
+      : [...this.getDisplayedParkings()];
+
+    this.showSuggestions = this.filteredParkings.length > 0;
+  }
+
   selectParking(parking: Parking): void {
     this.zone.run(() => {
       this.onParkingSelected(parking);
     });
-  }
-
-  // Ferme la suggestion sans casser le clic souris
-  onSearchBlur(): void {
-    setTimeout(() => {
-      this.showSuggestions = false;
-    }, 150);
   }
 }

@@ -29,39 +29,6 @@
   background: #f8fafc;
 }
 
-/* .type-chip__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: #dcfce7;
-  font-size: 18px;
-} */
-
-/* .type-chip__label {
-  padding-right: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
-} */
-/* .type-chip__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: #dcfce7;
-  color: #16a34a;
-  flex-shrink: 0;
-}
-
-.type-icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-} */
-
 .type-chip__icon {
   width: 40px;
   height: 40px;
@@ -126,20 +93,6 @@
   outline-offset: 3px;
 }
 
-/* .type-icon--bike {
-  color: #16a34a;
-} */
-
-/* .type-chip__icon--car {
-  background: #dbeafe;
-  color: #2563eb;
-} */
-
-/* .type-chip__icon--bike {
-  background: #dcfce7;
-  color: #16a34a;
-} */
-
 .close-btn {
   width: 36px;
   height: 36px;
@@ -184,11 +137,17 @@
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-bottom: 30px;
+  gap: 10px;
+  margin-bottom: 22px;
 }
 
 @media (max-width: 860px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -198,26 +157,20 @@
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 18px;
-  min-height: 112px;
-  padding: 16px 14px;
+  padding: 12px 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .stat-value {
-  font-size: 38px;
-  margin-bottom: 6px;
-}
-
-.stat-value {
-  font-size: 54px;
+  font-size: 32px;
   line-height: 1;
   font-weight: 800;
   color: #0f172a;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .stat-label {
@@ -319,6 +272,13 @@
   border-radius: 18px;
   display: grid;
   place-items: center;
+}
+
+.icon-circle svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.14));
 }
 
 .icon-car {
@@ -444,6 +404,13 @@
   background: #fee2e2;
 }
 
+.stats-container {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
 .tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -500,11 +467,42 @@
 }
 
 .chart-container {
-  min-height: 180px;
+  min-height: 220px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 20px;
   padding: 16px;
+  position: relative;
+}
+
+.chart-shell {
+  position: relative;
+  height: 220px;
+  min-height: 220px;
+  max-height: 220px;
+  width: 100%;
+}
+
+.chart-shell canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  max-width: 100%;
+  max-height: 220px;
+}
+
+.chart-loading,
+.chart-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60px;
+  margin-top: 12px;
+  color: #64748b;
+  font-weight: 600;
+  text-align: center;
 }
 
 .chart-note {
@@ -584,4 +582,28 @@
   min-height: 84px;
   color: #64748b;
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .detail-wrapper {
+    padding: 16px 16px 22px;
+  }
+
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .parking-name {
+    font-size: 26px;
+  }
+
+  .chart-shell {
+    height: 200px;
+    min-height: 200px;
+    max-height: 200px;
+  }
+
+  .chart-shell canvas {
+    max-height: 200px;
+  }
 }

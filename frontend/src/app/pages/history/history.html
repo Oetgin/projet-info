@@ -7,45 +7,12 @@
     </div>
   </header>
 
-  <div class="period-selector">
-    <div class="period-label">Période :</div>
-    <div class="period-buttons">
-      <button
-        *ngFor="let limit of durations"
-        type="button"
-        class="period-btn"
-        [class.active]="selectedDuration === limit"
-        (click)="selectLimit(limit)"
-      >
-        {{ limit === 0.5 ? '30 min' : limit === 1 ? '1h' : limit + 'h' }}
-      </button>
-    </div>
-  </div>
-
-  <div class="kpis-grid">
-    <div class="kpi-card">
-      <div class="kpi-value">{{ currentFreePlaces }}</div>
-      <div class="kpi-label">Places libres (now)</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value">{{ minOccupied }}</div>
-      <div class="kpi-label">Min occupé</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value">{{ maxOccupied }}</div>
-      <div class="kpi-label">Max occupé</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-value">{{ averageOccupied }}</div>
-      <div class="kpi-label">Moy. occupé</div>
-    </div>
-  </div>
-
   <div class="card">
     <h3>Évolution sur {{ periodLabel }}</h3>
-    <p class="card-subtitle">Places occupées vs libres dans le temps</p>
+    <p class="card-subtitle">Places occupées sur les dernières 5 heures</p>
     <div class="chart-wrap">
       <canvas id="historyChart"></canvas>
+      <!-- <div class="chart-loading" *ngIf="isLoading">Chargement des données...</div> -->
     </div>
   </div>
 
@@ -69,6 +36,6 @@
   </div>
 
   <div class="panel-actions">
-    <button class="action-btn" type="button" (click)="goBack()">← Retour à la carte</button>
+    <button class="action-btn" type="button" (click)="goBack()">Retour à la carte</button>
   </div>
 </div>

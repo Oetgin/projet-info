@@ -16,9 +16,8 @@ export class HistoryComponent implements OnInit, AfterViewInit {
   parkingName = '';
   history: HistoryRecord[] = [];
   isLoading = false;
-  selectedDuration = 6;
-  durations = [0.5, 1, 3, 6, 12, 24];
   private chart?: Chart;
+  private readonly historyWindowHours = 5;
 
   constructor(
     private route: ActivatedRoute,
@@ -39,15 +38,12 @@ export class HistoryComponent implements OnInit, AfterViewInit {
   }
 
   get displayHistory(): HistoryRecord[] {
-    if (!this.history.length) return [];
-    const latestTime = new Date(this.history[this.history.length - 1].time).getTime();
-    const windowStart = latestTime - this.selectedDuration * 60 * 60 * 1000;
-    return this.history.filter((item) => new Date(item.time).getTime() >= windowStart);
+    return this.history;
   }
 
   get currentFreePlaces(): number {
     if (!this.history.length) return 0;
-    const latest = this.history[this.history.length - 1];
+    const latest = this.history[0];
     return latest.total_spaces - latest.occupied_spaces;
   }
 
@@ -70,14 +66,7 @@ export class HistoryComponent implements OnInit, AfterViewInit {
   }
 
   get periodLabel(): string {
-    if (this.selectedDuration === 0.5) return '30 min';
-    if (this.selectedDuration === 1) return '1h';
-    return `${this.selectedDuration}h`;
-  }
-
-  selectLimit(limit: number): void {
-    this.selectedDuration = limit;
-    setTimeout(() => this.renderChart(), 0);
+    return `${this.historyWindowHours}h`;
   }
 
   goBack(): void {
@@ -87,11 +76,22 @@ export class HistoryComponent implements OnInit, AfterViewInit {
   private loadHistory(): void {
     if (!this.parkingId) return;
     this.isLoading = true;
-    this.parkingService.getHistory(this.parkingId, 96).subscribe({
+    const refIso = this.parkingService.referenceTime ?? new Date().toISOString();
+    const refTs = new Date(refIso).getTime();
+    const windowMs = this.historyWindowHours * 60 * 60 * 1000;
+
+    this.parkingService.getHistory(this.parkingId, 96, refIso).subscribe({
       next: (items) => {
-        this.history = items.sort(
-          (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
-        );
+        this.history = items
+          .map((record) => ({
+            ...record,
+            time: this.parkingService.normalizeApiTime(record.time).toISOString(),
+          }))
+          .filter((r) => {
+            const ts = new Date(r.time).getTime();
+            return ts <= refTs && ts >= refTs - windowMs;
+          })
+          .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
         this.isLoading = false;
         setTimeout(() => this.renderChart(), 0);
       },
