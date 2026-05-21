@@ -2,8 +2,7 @@ import { Component, AfterViewInit, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import Chart from 'chart.js/auto';
-
-type Point = { hour: string; occupancy: number };
+import { ParkingService, PredictionRecord } from '../../services/parking.service';
 
 @Component({
   selector: 'app-predictions',
@@ -12,78 +11,99 @@ type Point = { hour: string; occupancy: number };
   templateUrl: './predictions.html',
   styleUrls: ['./predictions.css'],
 })
-export class PredictionsComponent implements AfterViewInit, OnInit {
-
+export class PredictionsComponent implements OnInit, AfterViewInit {
+  parkingId = '';
+  parkingName = '';
+  predictions: PredictionRecord[] = [];
+  isLoading = false;
+  selectedHorizon = 6;
+  horizonOptions = [0.5, 1, 3, 6, 12, 24];
   private chart?: Chart;
-  parkingId!: string;
+  private parkingTotal = 0;
+  private parkingFree = 0;
 
   constructor(
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private parkingService: ParkingService,
   ) {}
 
   ngOnInit(): void {
     this.parkingId = this.route.snapshot.paramMap.get('id') ?? '';
+    if (this.parkingService.selectedParking?.id === this.parkingId) {
+      this.parkingName = this.parkingService.selectedParking.name;
+      this.parkingTotal = this.parkingService.selectedParking.total;
+      this.parkingFree = this.parkingService.selectedParking.free;
+    }
+    this.loadPredictions();
   }
 
   ngAfterViewInit(): void {
-    this.renderChart();
+    setTimeout(() => this.renderChart(), 0);
   }
 
-  // ===== MOCK DATA =====
+  get displayPredictions(): PredictionRecord[] {
+    if (!this.predictions.length) {
+      return [];
+    }
 
-  history: Point[] = [
-    { hour: '00h', occupancy: 35 },
-    { hour: '03h', occupancy: 22 },
-    { hour: '06h', occupancy: 28 },
-    { hour: '09h', occupancy: 78 },
-    { hour: '12h', occupancy: 66 },
-    { hour: '15h', occupancy: 72 },
-    { hour: '18h', occupancy: 88 },
-    { hour: '21h', occupancy: 55 },
-    { hour: '23h', occupancy: 40 },
-  ];
+    const startTime = new Date(this.predictions[0].time).getTime();
+    const horizonMs = this.selectedHorizon * 60 * 60 * 1000;
 
-  forecast: Point[] = [
-    { hour: '+1h', occupancy: 62 },
-    { hour: '+2h', occupancy: 74 },
-    { hour: '+3h', occupancy: 81 },
-    { hour: '+4h', occupancy: 69 },
-  ];
-
-  // ===== NAVIGATION =====
-
-  goBack() {
-    this.router.navigate(['/']);
+    return this.predictions.filter((record) => {
+      const recordTime = new Date(record.time).getTime();
+      return recordTime - startTime <= horizonMs;
+    });
   }
 
-  // ===== KPI =====
-
-  get globalRate(): number {
-    const avg =
-      this.history.reduce((sum, p) => sum + p.occupancy, 0) /
-      this.history.length;
-    return Math.round(avg);
+  get currentFree(): number {
+    if (this.parkingFree) {
+      return this.parkingFree;
+    }
+    if (!this.predictions.length) {
+      return 0;
+    }
+    const firstTotal = this.predictions[0].total_spaces ?? 0;
+    const firstOccupied = this.predictions[0].predicted_occupied ?? 0;
+    return Math.max(firstTotal - firstOccupied, 0);
   }
 
-  get peakHour(): string {
-    const peak = [...this.history].sort(
-      (a, b) => b.occupancy - a.occupancy
-    )[0];
-    return peak?.hour ?? '--';
+  get meanOccupied(): number {
+    const target = this.displayPredictions.length ? this.displayPredictions : this.predictions;
+    if (!target.length) return 0;
+    return Math.round(
+      target.reduce((sum, item) => sum + item.predicted_occupied, 0) / target.length,
+    );
+  }
+
+  get minBound(): number {
+    const target = this.displayPredictions.length ? this.displayPredictions : this.predictions;
+    if (!target.length) return 0;
+    return Math.min(...target.map((p) => p.predicted_lower_bound));
+  }
+
+  get maxBound(): number {
+    const target = this.displayPredictions.length ? this.displayPredictions : this.predictions;
+    if (!target.length) return 0;
+    return Math.max(...target.map((p) => p.predicted_upper_bound));
   }
 
   get advice(): string {
-    const next = this.forecast[0]?.occupancy ?? 0;
-
-    if (next >= 80)
-      return 'Affluence élevée : privilégier les parkings en périphérie.';
-    if (next >= 60)
-      return 'Affluence modérée : prévoir un peu d’avance.';
-    return 'Bonne disponibilité : conditions favorables pour se garer.';
+    const next = this.displayPredictions[0]?.predicted_occupied ?? this.predictions[0]?.predicted_occupied ?? 0;
+    if (next >= 80) {
+      return 'Affluence élevée prévue : privilégier les parkings alternatifs.';
+    }
+    if (next >= 60) {
+      return 'Affluence modérée : partez un peu plus tôt.';
+    }
+    return 'Disponibilité stable prévue.';
   }
 
-  // ===== COULEUR LOGIQUE =====
+  get horizonLabel(): string {
+    if (this.selectedHorizon === 0.5) return '30 min';
+    if (this.selectedHorizon === 1) return '1h';
+    return `${this.selectedHorizon}h`;
+  }
 
   getLevelClass(occ: number): 'good' | 'mid' | 'high' {
     if (occ >= 80) return 'high';
@@ -97,14 +117,45 @@ export class PredictionsComponent implements AfterViewInit, OnInit {
     return 'Bonne';
   }
 
-  // ===== CHART =====
+  goBack(): void {
+    this.router.navigate(['/map']);
+  }
 
-  private renderChart() {
+  selectHorizon(hours: number): void {
+    this.selectedHorizon = hours;
+    setTimeout(() => this.renderChart(), 0);
+  }
+
+  private loadPredictions(): void {
+    if (!this.parkingId) return;
+    this.isLoading = true;
+    this.parkingService.getPredictions(this.parkingId, 48).subscribe({
+      next: (items: PredictionRecord[]) => {
+        this.predictions = items.sort(
+          (a, b) => new Date(a.time).getTime() - new Date(b.time).getTime(),
+        );
+        this.parkingFree = this.parkingService.selectedParking?.free ?? this.parkingFree;
+        this.parkingTotal = this.parkingService.selectedParking?.total ?? this.parkingTotal;
+        this.isLoading = false;
+        setTimeout(() => this.renderChart(), 0);
+      },
+      error: (error: unknown) => {
+        console.error('Erreur chargement des prédictions :', error);
+        this.isLoading = false;
+      },
+    });
+  }
+
+  private renderChart(): void {
     const canvas = document.getElementById('occChart') as HTMLCanvasElement | null;
-    if (!canvas) return;
+    if (!canvas || !this.predictions.length) return;
 
-    const labels = this.history.map(p => p.hour);
-    const data = this.history.map(p => p.occupancy);
+    const labels = this.displayPredictions.map((item) =>
+      new Date(item.time).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+    );
+    const occupiedData = this.displayPredictions.map((item) => item.predicted_occupied);
+    const lowerData = this.displayPredictions.map((item) => item.predicted_lower_bound);
+    const upperData = this.displayPredictions.map((item) => item.predicted_upper_bound);
 
     this.chart?.destroy();
 
@@ -114,24 +165,52 @@ export class PredictionsComponent implements AfterViewInit, OnInit {
         labels,
         datasets: [
           {
-            label: 'Occupation (%) - 24h',
-            data,
+            label: 'Borne basse',
+            data: lowerData,
+            borderColor: 'transparent',
+            backgroundColor: 'rgba(37, 99, 235, 0.16)',
+            fill: '+1',
+            pointRadius: 0,
             tension: 0.35,
+          },
+          {
+            label: 'Prédiction',
+            data: occupiedData,
+            borderColor: '#1d4ed8',
+            backgroundColor: 'rgba(37, 99, 235, 0.08)',
             borderWidth: 2,
             fill: false,
-          }
-        ]
+            tension: 0.35,
+            pointRadius: 4,
+            pointBackgroundColor: '#1d4ed8',
+          },
+          {
+            label: 'Borne haute',
+            data: upperData,
+            borderColor: 'transparent',
+            backgroundColor: 'rgba(37, 99, 235, 0.16)',
+            pointRadius: 0,
+            tension: 0.35,
+          },
+        ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+        },
         scales: {
+          x: {
+            ticks: { font: { size: 11 } },
+          },
           y: {
-            min: 0,
-            max: 100
-          }
-        }
-      }
+            beginAtZero: true,
+            max: Math.max(...upperData, 100),
+            ticks: { font: { size: 12 } },
+          },
+        },
+      },
     });
   }
 }

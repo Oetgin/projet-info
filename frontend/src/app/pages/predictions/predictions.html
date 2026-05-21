@@ -1,64 +1,86 @@
 <div class="page">
-    <header class="top">
-      <button class="back" (click)="goBack()">←</button>
-      <h2>Prévisions pour {{ parkingId }}</h2>
-      <div>
-        <h2>Prédictions</h2>
-        <p class="sub">Tendances d’occupation à Rennes</p>
-      </div>
-    </header>
-   
-    <div class="kpis">
-      <div class="kpi">
-        <div class="label">Taux global</div>
-        <div class="value">{{ globalRate }}%</div>
-      </div>
-  
-      <div class="kpi">
-        <div class="label">Heure de pointe</div>
-        <div class="value">{{ peakHour }}</div>
-      </div>
-  
-      <div class="kpi">
-        <div class="label">Conseil</div>
-        <div class="value small">{{ advice }}</div>
-      </div>
+  <header class="top">
+    <button class="back" (click)="goBack()">←</button>
+    <div>
+      <h2>{{ parkingName }}</h2>
+      <p class="sub">Prédictions de disponibilité</p>
     </div>
-  
-    <div class="card">
-      <h3>Occupation - dernières 24h</h3>
-      <div class="chart-wrap">
-        <canvas id="occChart"></canvas>
-      </div>
+  </header>
+
+  <div class="horizon-selector">
+    <div class="horizon-label">Horizon :</div>
+    <div class="horizon-buttons">
+      <button
+        *ngFor="let hours of horizonOptions"
+        type="button"
+        class="horizon-btn"
+        [class.active]="selectedHorizon === hours"
+        (click)="selectHorizon(hours)"
+      >
+        {{ hours === 0.5 ? '30 min' : hours === 1 ? '1h' : hours + 'h' }}
+      </button>
     </div>
-  
-    <div class="card">
-      <h3>Prévisions (prochaines heures)</h3>
-  
-      <div class="forecast">
-        <div class="row" *ngFor="let p of forecast">
-  
-          <div class="left">
-            <span class="hour">{{ p.hour }}</span>
-  
-            <span class="pill" [ngClass]="getLevelClass(p.occupancy)">
-              {{ getLevelLabel(p.occupancy) }}
-            </span>
-          </div>
-  
-          <div class="right">
-            <strong>{{ p.occupancy }}%</strong>
-  
-            <div class="mini-bar">
-              <div
-                class="mini-fill"
-                [ngClass]="getLevelClass(p.occupancy)"
-                [style.width.%]="p.occupancy">
-              </div>
-            </div>
-          </div>
-  
+  </div>
+
+  <div class="kpis-grid">
+    <div class="kpi-card">
+      <div class="kpi-value">{{ currentFree }}</div>
+      <div class="kpi-label">Libres actuellement</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ meanOccupied }}</div>
+      <div class="kpi-label">Moy. occupés prévus</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ minBound }}</div>
+      <div class="kpi-label">Min borne inf.</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ maxBound }}</div>
+      <div class="kpi-label">Max borne sup.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Prévision sur {{ horizonLabel }}</h3>
+    <p class="card-subtitle">Occupation prévue avec intervalle de confiance</p>
+    <div class="chart-wrap">
+      <canvas id="occChart"></canvas>
+    </div>
+  </div>
+
+  <div class="advice-box">
+    <svg
+      class="advice-icon"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+    >
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+    </svg>
+    <span>{{ advice }}</span>
+  </div>
+
+  <div class="card" *ngIf="displayPredictions.length > 0">
+    <div class="forecast">
+      <div class="row" *ngFor="let item of displayPredictions">
+        <div class="left">
+          <span class="hour">{{ item.time | date: 'HH:mm' }}</span>
+          <span class="small-text">{{ item.predicted_occupied }} places prévues</span>
+        </div>
+        <div class="right">
+          <strong>{{ item.predicted_lower_bound }} - {{ item.predicted_upper_bound }}</strong>
         </div>
       </div>
     </div>
   </div>
+
+  <div class="empty-message" *ngIf="displayPredictions.length === 0 && !isLoading">
+    Aucune donnée disponible
+  </div>
+
+  <div class="panel-actions">
+    <button class="action-btn" type="button" (click)="goBack()">← Retour à la carte</button>
+  </div>
+</div>

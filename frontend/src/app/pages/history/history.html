@@ -1,0 +1,74 @@
+<div class="page">
+  <header class="top">
+    <button class="back" (click)="goBack()">←</button>
+    <div>
+      <h2>{{ parkingName }}</h2>
+      <p class="sub">Historique de disponibilité</p>
+    </div>
+  </header>
+
+  <div class="period-selector">
+    <div class="period-label">Période :</div>
+    <div class="period-buttons">
+      <button
+        *ngFor="let limit of durations"
+        type="button"
+        class="period-btn"
+        [class.active]="selectedDuration === limit"
+        (click)="selectLimit(limit)"
+      >
+        {{ limit === 0.5 ? '30 min' : limit === 1 ? '1h' : limit + 'h' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="kpis-grid">
+    <div class="kpi-card">
+      <div class="kpi-value">{{ currentFreePlaces }}</div>
+      <div class="kpi-label">Places libres (now)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ minOccupied }}</div>
+      <div class="kpi-label">Min occupé</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ maxOccupied }}</div>
+      <div class="kpi-label">Max occupé</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-value">{{ averageOccupied }}</div>
+      <div class="kpi-label">Moy. occupé</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Évolution sur {{ periodLabel }}</h3>
+    <p class="card-subtitle">Places occupées vs libres dans le temps</p>
+    <div class="chart-wrap">
+      <canvas id="historyChart"></canvas>
+    </div>
+  </div>
+
+  <div class="card" *ngIf="displayHistory.length > 0">
+    <div class="forecast">
+      <div class="row" *ngFor="let item of displayHistory">
+        <div class="left">
+          <span class="hour">{{ item.time | date: 'HH:mm' }}</span>
+          <span class="status">{{ item.status }}</span>
+        </div>
+        <div class="right">
+          <strong>{{ item.occupied_spaces }}</strong>
+          <span class="small-text">occupées</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-message" *ngIf="displayHistory.length === 0 && !isLoading">
+    Aucune donnée pour cette période
+  </div>
+
+  <div class="panel-actions">
+    <button class="action-btn" type="button" (click)="goBack()">← Retour à la carte</button>
+  </div>
+</div>

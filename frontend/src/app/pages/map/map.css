@@ -28,9 +28,62 @@
   backdrop-filter: blur(1.5px);
 }
 
-
 .leaflet-container {
   z-index: 1 !important;
+}
+
+.detail-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: auto;
+  z-index: 2100;
+  display: flex;
+  justify-content: flex-end;
+  align-items: stretch;
+  pointer-events: none;
+}
+
+.detail-panel.open {
+  pointer-events: auto;
+}
+
+.detail-panel app-parking-detail {
+  width: min(520px, 100%);
+  height: 100%;
+  margin: 0;
+  pointer-events: auto;
+}
+
+.custom-marker-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custom-marker {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  color: #ffffff;
+  border: 2px solid #ffffff;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+}
+
+.custom-marker.car {
+  background: #2563eb;
+}
+
+.custom-marker.bike {
+  background: #22c55e;
+}
+
+.custom-marker svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* ===== Overlay supérieur flottant ===== */
@@ -222,7 +275,7 @@
   left: 16px;
   right: 16px;
   bottom: 18px;
-  z-index: 1000;
+  z-index: 1200;
   max-width: 420px;
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(226, 232, 240, 0.95);
@@ -257,189 +310,4 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
-}
-
-.badge.green {
-  background: #dcfce7;
-  color: #166534;
-}
-
-.badge.orange {
-  background: #ffedd5;
-  color: #c2410c;
-}
-
-.badge.red {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.progress-wrapper {
-  width: 100%;
-  height: 8px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.progress {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #2563eb, #60a5fa);
-}
-
-.distance {
-  margin: 0 0 10px;
-  color: #64748b;
-  font-size: 14px;
-}
-
-.card-footer {
-  color: #2563eb;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-/* ===== Icônes markers ===== */
-.custom-marker-wrapper {
-  background: transparent;
-  border: none;
-}
-
-.custom-marker {
-  width: 20px;
-  height: 20px;
-  border-radius: 999px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.18);
-  /* border: 3px solid rgba(255, 255, 255, 0.92); */
-  /* transform: translateZ(0); */
-}
-
-
-
-.custom-marker svg {
-  display: block;
-  margin: auto;
-}
-
-.custom-marker.car {
-  background: #3b82f6;
-}
-
-.custom-marker.bike {
-  background: #22c55e;
-}
-
-.user-marker-wrapper {
-  background: transparent;
-  border: none;
-}
-
-.user-marker-pulse {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 999px;
-  background: rgba(37, 99, 235, 0.22);
-  animation: pulse 1.8s infinite;
-}
-
-.user-marker-dot {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 999px;
-  background: #2563eb;
-  border: 2px solid white;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-}
-
-
-/* Detail panel */
-
-.detail-panel {
- position: absolute;
-  top: 0;
-  right: 0;
-  width: 420px;
-  max-width: 92vw;
-  height: 100%;
-  background: #ffffff;
-  z-index: 1200;
-  box-shadow: -16px 0 40px rgba(0, 0, 0, 0.18);
-  overflow-y: auto;
-  border-left: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.detail-panel.open {
-  transform: translateX(0);
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(0.9);
-    opacity: 0.85;
-  }
-  70% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 900px) {
-  .top-overlay {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-panel {
-    max-width: 100%;
-  }
-
-  .controls-row {
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-  .top-overlay {
-    top: 12px;
-    left: 12px;
-    right: 12px;
-    gap: 10px;
-  }
-
-  .controls-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .floating-panel {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .filter-item,
-  .action-btn,
-  .icon-btn {
-    font-size: 13px;
-  }
-
-  .card {
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    max-width: none;
-  }
 }

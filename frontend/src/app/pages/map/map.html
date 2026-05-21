@@ -181,6 +181,17 @@
       {{ selectedParking.distance | number: '1.0-2' }} km de votre position
     </p>
 
-    <div class="card-footer">Voir les détails</div>
+    <button type="button" class="card-footer">Voir les détails</button>
   </div>
+
+  <section class="remote-summary" *ngIf="remoteParkings.length">
+    <h2>Parkings distants</h2>
+    <ul class="remote-list">
+      <li *ngFor="let park of remoteParkings">
+        <strong>{{ park.id }}</strong> — {{ park.free }} libres / {{ park.total }} total —
+        {{ park.status }}
+        <span class="remote-time">({{ park.lastUpdate | date: 'short' }})</span>
+      </li>
+    </ul>
+  </section>
 </div>

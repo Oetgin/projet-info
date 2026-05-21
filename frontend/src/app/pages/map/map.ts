@@ -3,23 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import * as L from 'leaflet';
 import { Router } from '@angular/router';
-import { ParkingService } from '../../services/parking.service';
+import { Parking, ParkingService } from '../../services/parking.service';
 import { ButtonModule } from 'primeng/button';
-import { ParkingDetailComponent } from "../parking-detail/parking-detail";
-
-type ParkingType = 'car' | 'bike';
-
-interface Parking {
-  id: string;
-  name: string;
-  free: number;
-  total: number;
-  status: string;
-  lat: number;
-  lng: number;
-  type: ParkingType;
-  distance?: number;
-}
+import { ParkingDetailComponent } from '../parking-detail/parking-detail';
 
 @Component({
   selector: 'app-map',
@@ -50,6 +36,12 @@ export class MapComponent implements OnInit, AfterViewInit {
   // Parking sélectionné
   selectedParking!: Parking;
 
+  // Données distantes (remote API) - SOURCE UNIQUE
+  remoteParkings: Parking[] = [];
+
+  // Loading state
+  isLoadingParkings = true;
+
   showDetailPanel = false;
 
   constructor(
@@ -61,15 +53,38 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   // Initialisation Angular
   ngOnInit(): void {
-    this.selectedParking = this.parkingService.selectedParking ?? PARKINGS[0];
-    this.filteredParkings = [...PARKINGS];
+    this.fetchRemoteParkings();
   }
 
   // Initialisation Leaflet après rendu du DOM
   ngAfterViewInit(): void {
     this.initMap();
-    this.refreshMarkers();
     this.locateUser();
+  }
+
+  private fetchRemoteParkings(): void {
+    this.isLoadingParkings = true;
+    this.parkingService.getRemoteParkings().subscribe({
+      next: (items) => {
+        this.remoteParkings = items;
+        this.filteredParkings = [...items];
+        if (items.length > 0) {
+          this.selectedParking = this.parkingService.selectedParking ?? items[0];
+          this.refreshMarkers();
+        } else {
+          console.warn("Aucun parking récupéré de l'API");
+        }
+        this.isLoadingParkings = false;
+      },
+      error: (error) => {
+        console.error('Erreur récupération données distantes :', error);
+        this.isLoadingParkings = false;
+      },
+    });
+  }
+
+  private getDisplayedParkings(): Parking[] {
+    return this.remoteParkings;
   }
 
   // Création de la carte
@@ -89,7 +104,7 @@ export class MapComponent implements OnInit, AfterViewInit {
     this.visibleMarkers.forEach((marker) => this.map.removeLayer(marker));
     this.visibleMarkers = [];
 
-    PARKINGS.forEach((parking) => {
+    this.getDisplayedParkings().forEach((parking) => {
       const shouldShow =
         (parking.type === 'car' && this.showCars) || (parking.type === 'bike' && this.showBikes);
 
@@ -126,7 +141,7 @@ export class MapComponent implements OnInit, AfterViewInit {
   goToDetail(): void {
     // this.router.navigate(['/parking', this.selectedParking.id]);
     console.log('OPEN PANEL');
-    
+
     this.parkingService.selectedParking = this.selectedParking;
     this.showDetailPanel = true;
   }
@@ -180,12 +195,13 @@ export class MapComponent implements OnInit, AfterViewInit {
     return L.divIcon({
       className: 'custom-marker-wrapper',
       html: `
-        <div class="custom-marker" style="background:${bg}">
+        <div class="custom-marker ${parking.type}" style="background:${bg}">
           ${iconSvg}
         </div>
       `,
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
+      iconSize: [44, 44],
+      iconAnchor: [22, 44],
+      popupAnchor: [0, -40],
     });
   }
 
@@ -222,6 +238,7 @@ export class MapComponent implements OnInit, AfterViewInit {
         fillOpacity: 0.15,
       }).addTo(this.map);
 
+      this.parkingService.setUserLocation(lat, lng);
       this.findClosestParkings(lat, lng);
       this.cdr.detectChanges();
     });
@@ -259,7 +276,7 @@ export class MapComponent implements OnInit, AfterViewInit {
 
   // Ajoute la distance à chaque parking
   findClosestParkings(userLat: number, userLng: number): void {
-    PARKINGS.forEach((parking) => {
+    this.getDisplayedParkings().forEach((parking) => {
       parking.distance = this.calculateDistance(userLat, userLng, parking.lat, parking.lng);
     });
   }
@@ -269,12 +286,12 @@ export class MapComponent implements OnInit, AfterViewInit {
     const query = this.searchTerm.trim().toLowerCase();
 
     if (!query) {
-      this.filteredParkings = [...PARKINGS];
+      this.filteredParkings = [...this.getDisplayedParkings()];
       this.showSuggestions = true;
       return;
     }
 
-    this.filteredParkings = PARKINGS.filter((parking) =>
+    this.filteredParkings = this.getDisplayedParkings().filter((parking) =>
       parking.name.toLowerCase().includes(query),
     );
     this.showSuggestions = true;
@@ -294,107 +311,3 @@ export class MapComponent implements OnInit, AfterViewInit {
     }, 150);
   }
 }
-
-// ===== Données : 10 parkings / stations =====
-const PARKINGS: Parking[] = [
-  {
-    id: 'republique',
-    name: 'Parking République',
-    free: 120,
-    total: 300,
-    status: 'Disponible',
-    lat: 48.1173,
-    lng: -1.6778,
-    type: 'car',
-  },
-  {
-    id: 'charles-de-gaulle',
-    name: 'Parking Charles de Gaulle',
-    free: 15,
-    total: 250,
-    status: 'Complet',
-    lat: 48.1115,
-    lng: -1.6805,
-    type: 'car',
-  },
-  {
-    id: 'gare-sud',
-    name: 'Parking Gare Sud',
-    free: 34,
-    total: 180,
-    status: 'Disponible',
-    lat: 48.1059,
-    lng: -1.6737,
-    type: 'car',
-  },
-  {
-    id: 'colombier',
-    name: 'Parking Colombier',
-    free: 48,
-    total: 220,
-    status: 'Disponible',
-    lat: 48.1048,
-    lng: -1.6756,
-    type: 'car',
-  },
-  {
-    id: 'hoche',
-    name: 'Parking Hoche',
-    free: 12,
-    total: 90,
-    status: 'Complet',
-    lat: 48.1152,
-    lng: -1.6689,
-    type: 'car',
-  },
-  {
-    id: 'saint-anne',
-    name: 'Parking Saint-Anne',
-    free: 60,
-    total: 140,
-    status: 'Disponible',
-    lat: 48.1158,
-    lng: -1.6888,
-    type: 'car',
-  },
-  {
-    id: 'bike-republique',
-    name: 'Station Vélo République',
-    free: 22,
-    total: 40,
-    status: 'Disponible',
-    lat: 48.1112,
-    lng: -1.6712,
-    type: 'bike',
-  },
-  {
-    id: 'bike-saint-anne',
-    name: 'Station Vélo Sainte-Anne',
-    free: 9,
-    total: 24,
-    status: 'Disponible',
-    lat: 48.1147,
-    lng: -1.6808,
-    type: 'bike',
-  },
-  {
-    id: 'bike-colombier',
-    name: 'Station Vélo Colombier',
-    free: 17,
-    total: 30,
-    status: 'Disponible',
-    lat: 48.1071,
-    lng: -1.6838,
-    type: 'bike',
-  },
-  {
-    id: 'bike-gare',
-    name: 'Station Vélo Gare',
-    free: 14,
-    total: 26,
-    status: 'Disponible',
-    lat: 48.1049,
-    lng: -1.6719,
-    type: 'bike',
-  },
-];
