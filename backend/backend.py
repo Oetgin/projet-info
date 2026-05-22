@@ -43,7 +43,7 @@ def overview():
             data.append({
                 "parc_id": row["idparc"], # type: ignore
                 "total_spaces": row["capacitesoliste"], # type: ignore
-                "occupied_spaces": row["jrdinfosoliste"], # type: ignore
+                "occupied_spaces": row["capacitesoliste"] - row["jrdinfosoliste"], # type: ignore
                 "status": row["etatouverture"], # type: ignore
                 "lastupdate": row["lastupdate"].isoformat(), # type: ignore
             })
