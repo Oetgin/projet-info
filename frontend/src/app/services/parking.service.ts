@@ -42,6 +42,8 @@ interface RemoteParking {
   lastupdate: string;
 }
 
+const API_BASE = 'https://api.eaas.page';
+
 const PARKING_META: Record<string, { name: string; lat: number; lng: number }> = {
   CVI: { name: 'Parc relais Cesson-Viasilva', lat: 48.1196, lng: -1.6289 },
   HFR: { name: 'Parc relais Henri Fréville', lat: 48.0877, lng: -1.6748 },
@@ -93,7 +95,7 @@ export class ParkingService {
   }
 
   getRemoteParkings(): Observable<Parking[]> {
-    return this.http.get<RemoteParking[]>('/api/overview').pipe(
+    return this.http.get<RemoteParking[]>(`${API_BASE}/overview`).pipe(
       map((items) => {
         const mapped = items.map((item): Parking | null => {
           const meta = PARKING_META[item.parc_id];
@@ -121,7 +123,7 @@ export class ParkingService {
   }
 
   getHistory(parkId: string, limit = 100, from?: string): Observable<HistoryRecord[]> {
-    let url = `/api/history/${parkId}?limit=${limit}`;
+    let url = `${API_BASE}/history/${parkId}?limit=${limit}`;
     if (from) {
       url += `&from=${encodeURIComponent(from)}`;
     }
@@ -129,7 +131,7 @@ export class ParkingService {
   }
 
   getPredictions(parkId: string, limit = 48, from?: string): Observable<PredictionRecord[]> {
-    let url = `/api/predictions/${parkId}?limit=${limit}`;
+    let url = `${API_BASE}/predictions/${parkId}?limit=${limit}`;
     if (from) {
       url += `&from=${encodeURIComponent(from)}`;
     }
