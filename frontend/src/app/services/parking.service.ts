@@ -45,14 +45,14 @@ interface RemoteParking {
 const API_BASE = 'https://api.eaas.page';
 
 const PARKING_META: Record<string, { name: string; lat: number; lng: number }> = {
-  CVI: { name: 'Parc relais Cesson-Viasilva', lat: 48.1196, lng: -1.6289 },
-  HFR: { name: 'Parc relais Henri Fréville', lat: 48.0877, lng: -1.6748 },
-  JFK: { name: 'Parc relais J.F. Kennedy', lat: 48.1279, lng: -1.7089 },
-  LGA: { name: 'Parc relais Les Gayeulles', lat: 48.1347, lng: -1.6467 },
-  POT: { name: 'Parc relais La Poterie', lat: 48.0916, lng: -1.6347 },
-  PRE: { name: 'Parc relais Les Préales', lat: 48.109, lng: -1.696 },
-  SJG: { name: 'Parc relais Saint-Jacques – Gaîté', lat: 48.0928, lng: -1.7085 },
-  VU: { name: 'Parc relais Villejean-Université', lat: 48.1213, lng: -1.704 },
+  CVI: { name: 'Parc relais Cesson-Viasilva', lat: 48.13259, lng: -1.620879 },
+  HFR: { name: 'Parc relais Henri Fréville', lat: 48.087537, lng: -1.674555 },
+  JFK: { name: 'Parc relais J.F. Kennedy', lat: 48.12108, lng: -1.713631 },
+  LGA: { name: 'Parc relais Les Gayeulles', lat: 48.129565, lng: -1.657108 },
+  POT: { name: 'Parc relais La Poterie', lat: 48.08682, lng: -1.64342 },
+  PRE: { name: 'Parc relais Les Préales', lat: 48.11356, lng: -1.64025 },
+  SJG: { name: 'Parc relais Saint-Jacques – Gaîté', lat: 48.091038, lng: -1.703637 },
+  VU: { name: 'Parc relais Villejean-Université', lat: 48.121906, lng: -1.704182 },
 };
 
 @Injectable({
