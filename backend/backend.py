@@ -91,7 +91,7 @@ def history(parc_id):
             # Rename the fields
             data.append({
                 "total_spaces": row["capacitesoliste"], # type: ignore
-                "occupied_spaces": row["jrdinfosoliste"], # type: ignore
+                "occupied_spaces": row["capacitesoliste"] - row["jrdinfosoliste"], # type: ignore
                 "status": row["etatouverture"], # type: ignore
                 "time": row["lastupdate"].isoformat(), # type: ignore
             })
